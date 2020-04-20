@@ -10,6 +10,6 @@ if __name__ == "__main__":
         print(f"\rScanlines remaining: {h - j - 1}", end="")
         for i in range(w):
             v = Vec3(i / w, j / h, 0.2)
-            img.write_pixel(h - j - 1, i, v)
+            img.write_pixel(i, h - j - 1, v)
     print("\nDone.")
     img.save("test.png", True)
