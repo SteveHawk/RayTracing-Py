@@ -1,6 +1,6 @@
 import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
-from vec3 import Vec3
+from utils.vec3 import Vec3
 
 
 class Img:

@@ -1,5 +1,5 @@
-from vec3 import Vec3
-from img import Img
+from utils.vec3 import Vec3
+from utils.img import Img
 
 
 if __name__ == "__main__":
