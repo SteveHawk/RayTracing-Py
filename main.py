@@ -3,7 +3,18 @@ from utils.img import Img
 from utils.ray import Ray
 
 
+def hit_sphere(center: Vec3, radius: float, r: Ray) -> bool:
+    oc = r.origin() - center
+    a = r.direction() @ r.direction()
+    b = oc @ r.direction() * 2
+    c = oc@oc - radius*radius
+    discriminant = b**2 - 4*a*c
+    return discriminant > 0
+
+
 def ray_color(r: Ray) -> Vec3:
+    if hit_sphere(Vec3(0, 0, -1), 0.5, r):
+        return Vec3(1, 0, 0)
     unit_direction: Vec3 = r.direction().unit_vector()
     t: float = (unit_direction.y() + 1) * 0.5
     return Vec3(1, 1, 1) * (1 - t) + Vec3(0.5, 0.7, 1) * t
