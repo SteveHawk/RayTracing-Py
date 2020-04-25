@@ -45,7 +45,7 @@ class Vec3:
         raise NotImplementedError
 
     def __matmul__(self, v: Vec3) -> float:
-        return self.e @ v
+        return self.e @ v.e
 
     def __truediv__(self, t: float) -> Vec3:
         return self * (1/t)
