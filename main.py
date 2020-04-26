@@ -1,22 +1,29 @@
 from utils.vec3 import Vec3
 from utils.img import Img
 from utils.ray import Ray
+import numpy as np
 
 
-def hit_sphere(center: Vec3, radius: float, r: Ray) -> bool:
-    oc = r.origin() - center
-    a = r.direction() @ r.direction()
-    b = oc @ r.direction() * 2
-    c = oc@oc - radius*radius
-    discriminant = b**2 - 4*a*c
-    return discriminant > 0
+def hit_sphere(center: Vec3, radius: float, r: Ray) -> float:
+    oc: Vec3 = r.origin() - center
+    a: float = r.direction() @ r.direction()
+    b: float = oc @ r.direction() * 2
+    c: float = oc@oc - radius*radius
+    discriminant: float = b**2 - 4*a*c
+    if discriminant < 0:
+        return -1
+    else:
+        return (-b - np.sqrt(discriminant)) / (2 * a)
 
 
 def ray_color(r: Ray) -> Vec3:
-    if hit_sphere(Vec3(0, 0, -1), 0.5, r):
-        return Vec3(1, 0, 0)
+    center: Vec3 = Vec3(0, 0, -1)
+    t: float = hit_sphere(center, 0.5, r)
+    if t > 0:
+        N: Vec3 = (r.at(t) - center).unit_vector()
+        return Vec3(N.x() + 1, N.y() + 1, N.z() + 1) * 0.5
     unit_direction: Vec3 = r.direction().unit_vector()
-    t: float = (unit_direction.y() + 1) * 0.5
+    t = (unit_direction.y() + 1) * 0.5
     return Vec3(1, 1, 1) * (1 - t) + Vec3(0.5, 0.7, 1) * t
 
 
