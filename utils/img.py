@@ -8,7 +8,7 @@ class Img:
     def __init__(self, w: int, h: int) -> None:
         self.frame: np.ndarray = np.zeros((h, w, 3), dtype=np.double)
 
-    def set_array(self, array: np.ndarray):
+    def set_array(self, array: np.ndarray) -> None:
         self.frame = array
 
     def write_pixel(self, w: int, h: int, v: Color) -> None:
