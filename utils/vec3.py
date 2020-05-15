@@ -23,7 +23,7 @@ class Vec3:
         return f"{self.e[0]} {self.e[1]} {self.e[2]}"
 
     def length_squared(self) -> float:
-        return np.sum(self.e ** 2)
+        return self.e @ self.e
 
     def length(self) -> float:
         return np.sqrt(self.length_squared())

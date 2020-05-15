@@ -6,14 +6,14 @@ import numpy as np
 
 def hit_sphere(center: Vec3, radius: float, r: Ray) -> float:
     oc: Vec3 = r.origin() - center
-    a: float = r.direction() @ r.direction()
-    b: float = oc @ r.direction() * 2
-    c: float = oc@oc - radius*radius
-    discriminant: float = b**2 - 4*a*c
+    a: float = r.direction().length_squared()
+    half_b: float = oc @ r.direction()
+    c: float = oc.length_squared() - radius*radius
+    discriminant: float = half_b**2 - a*c
     if discriminant < 0:
         return -1
     else:
-        return (-b - np.sqrt(discriminant)) / (2 * a)
+        return (-half_b - np.sqrt(discriminant)) / a
 
 
 def ray_color(r: Ray) -> Vec3:
