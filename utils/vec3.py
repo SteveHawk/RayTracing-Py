@@ -72,3 +72,8 @@ class Vec3:
 
     def unit_vector(self) -> Vec3:
         return (self / self.length())
+
+
+# Type aliases for Vec3
+Point3 = Vec3  # 3D point
+Color = Vec3  # RGB color
