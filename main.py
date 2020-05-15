@@ -45,7 +45,7 @@ def write_pic(j: int, image_width: int, image_height: int,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 1920
+    image_width = 640
     image_height = int(image_width / aspect_ratio)
     final_img = Img(image_width, image_height)
 
