@@ -1,4 +1,5 @@
 import numpy as np
+import multiprocessing
 from joblib import Parallel, delayed
 from typing import List
 from utils.vec3 import Vec3, Point3, Color
@@ -55,7 +56,8 @@ def main() -> None:
     distance = Vec3(0, 0, 1)
     lower_left_corner: Point3 = origin - horizontal/2 - vertical/2 - distance
 
-    img_list: List[Img] = Parallel(n_jobs=12)(
+    n_processer = multiprocessing.cpu_count()
+    img_list: List[Img] = Parallel(n_jobs=n_processer)(
         delayed(write_pic)(
             j, image_width, image_height,
             origin, lower_left_corner,
