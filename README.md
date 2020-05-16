@@ -9,3 +9,4 @@ This is a python implementation of the [Ray Tracing in One Weekend](https://rayt
 - Python >= 3.7
 - numpy
 - Pillow
+- joblib
