@@ -1,17 +1,24 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
 
 
-class hit_record:
-    def __init__(self, point: Point3, normal: Vec3, t: float) -> None:
+class HitRecord:
+    def __init__(self, point: Point3, t: float) -> None:
         self.p = point
-        self.normal = normal
         self.t = t
+        self.normal: Vec3
+        self.front_face: bool
+
+    def set_face_normal(self, r: Ray, outward_normal: Vec3) -> HitRecord:
+        self.front_face = (r.direction() @ outward_normal) < 0
+        self.normal = outward_normal if self.front_face else -outward_normal
+        return self
 
 
-class hittable(ABC):
+class Hittable(ABC):
     @abstractmethod
-    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[hit_record]:
+    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
         return NotImplemented

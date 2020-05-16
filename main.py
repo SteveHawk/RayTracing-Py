@@ -1,6 +1,6 @@
-import numpy as np
+import numpy as np  # type: ignore
 import multiprocessing
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed  # type: ignore
 from typing import List
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
