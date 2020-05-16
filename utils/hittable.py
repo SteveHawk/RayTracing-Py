@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
+from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
-from abc import ABC, abstractmethod
 
 
 class hit_record:
@@ -11,7 +12,6 @@ class hit_record:
 
 
 class hittable(ABC):
-    @classmethod
     @abstractmethod
-    def hit(cls, r: Ray, t_min: float, t_max: float, rec: hit_record) -> bool:
+    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[hit_record]:
         return NotImplemented

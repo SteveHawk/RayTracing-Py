@@ -11,7 +11,7 @@ def hit_sphere(center: Point3, radius: float, r: Ray) -> float:
     oc: Vec3 = r.origin() - center
     a: float = r.direction().length_squared()
     half_b: float = oc @ r.direction()
-    c: float = oc.length_squared() - radius*radius
+    c: float = oc.length_squared() - radius**2
     discriminant: float = half_b**2 - a*c
     if discriminant < 0:
         return -1
