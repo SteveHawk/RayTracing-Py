@@ -8,7 +8,8 @@ from utils.ray import Ray
 from utils.sphere import Sphere
 from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
-from utils.rtweekend import degrees_to_radians
+from utils.rtweekend import random_float
+from utils.camera import Camera
 
 
 def ray_color(r: Ray, world: Hittable) -> Color:
@@ -20,43 +21,40 @@ def ray_color(r: Ray, world: Hittable) -> Color:
     return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
 
-def scan_line(j: int, world: HittableList,
+def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
-              origin: Point3, lower_left_corner: Point3,
-              horizontal: Vec3, vertical: Vec3) -> Img:
+              samples_per_pixel: int) -> Img:
     img = Img(image_width, 1)
     for i in range(image_width):
-        u = i / image_width
-        v = j / image_height
-        r = Ray(origin, lower_left_corner + horizontal*u + vertical*v)
-        color = ray_color(r, world)
-        img.write_pixel(i, 0, color)
+        pixel_color = Color(0, 0, 0)
+        for s in range(samples_per_pixel):
+            u: float = (i + random_float()) / (image_width - 1)
+            v: float = (j + random_float()) / (image_height - 1)
+            r: Ray = cam.get_ray(u, v)
+            pixel_color += ray_color(r, world)
+        img.write_pixel(i, 0, pixel_color, samples_per_pixel)
     print(f"Scanlines remaining: {j} ", end="\r")
     return img
 
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 256
+    image_width = 384
     image_height = int(image_width / aspect_ratio)
+    samples_per_pixel = 100
 
-    origin = Point3(0, 0, 0)
-    horizontal = Vec3(4, 0, 0)
-    vertical = Vec3(0, 4/aspect_ratio, 0)
-    distance = Vec3(0, 0, 1)
-    lower_left_corner: Point3 = origin - horizontal/2 - vertical/2 - distance
-
-    world: HittableList = HittableList()
+    world = HittableList()
     world.add(Sphere(Point3(0, 0, -1), 0.5))
     world.add(Sphere(Point3(0, -100.5, -1), 100))
+
+    cam = Camera(aspect_ratio)
 
     n_processer = multiprocessing.cpu_count()
     img_list: List[Img] = Parallel(n_jobs=n_processer)(
         delayed(scan_line)(
-            j, world,
+            j, world, cam,
             image_width, image_height,
-            origin, lower_left_corner,
-            horizontal, vertical
+            samples_per_pixel
         ) for j in range(image_height-1, -1, -1)
     )
 

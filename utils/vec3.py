@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np  # type: ignore
 from typing import Union
+from utils.rtweekend import clamp
 
 
 class Vec3:
@@ -51,7 +52,7 @@ class Vec3:
         return self * (1/t)
 
     def __iadd__(self, v: Vec3) -> Vec3:
-        self.e += v
+        self.e += v.e
         return self
 
     def __imul__(self, v: Union[Vec3, int, float]) -> Vec3:
@@ -72,6 +73,13 @@ class Vec3:
 
     def unit_vector(self) -> Vec3:
         return (self / self.length())
+
+    def clamp(self, _min: float, _max: float) -> Vec3:
+        return Vec3(
+            clamp(self.e[0], _min, _max),
+            clamp(self.e[1], _min, _max),
+            clamp(self.e[2], _min, _max)
+        )
 
 
 # Type aliases for Vec3
