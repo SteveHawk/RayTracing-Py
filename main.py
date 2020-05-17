@@ -43,7 +43,7 @@ def main() -> None:
 
     origin = Point3(0, 0, 0)
     horizontal = Vec3(4, 0, 0)
-    vertical = Vec3(0, 4*aspect_ratio, 0)
+    vertical = Vec3(0, 4/aspect_ratio, 0)
     distance = Vec3(0, 0, 1)
     lower_left_corner: Point3 = origin - horizontal/2 - vertical/2 - distance
 
