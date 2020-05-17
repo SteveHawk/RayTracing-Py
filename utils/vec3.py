@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np  # type: ignore
 from typing import Union
-from utils.rtweekend import clamp
+from utils.rtweekend import random_float, clamp
 
 
 class Vec3:
@@ -80,6 +80,22 @@ class Vec3:
             clamp(self.e[1], _min, _max),
             clamp(self.e[2], _min, _max)
         )
+
+    @staticmethod
+    def random(_min: float = None, _max: float = None) -> Vec3:
+        return Vec3(
+            random_float(_min, _max),
+            random_float(_min, _max),
+            random_float(_min, _max)
+        )
+
+    @staticmethod
+    def random_in_unit_sphere() -> Vec3:
+        while True:
+            p: Vec3 = Vec3.random(-1, 1)
+            if p.length_squared() >= 1:
+                continue
+            return p
 
 
 # Type aliases for Vec3
