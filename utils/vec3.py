@@ -81,6 +81,9 @@ class Vec3:
             clamp(self.e[2], _min, _max)
         )
 
+    def gamma(self, gamma: float) -> Vec3:
+        return Vec3(*(self.e ** (1 / gamma)))
+
     @staticmethod
     def random(_min: float = None, _max: float = None) -> Vec3:
         return Vec3(

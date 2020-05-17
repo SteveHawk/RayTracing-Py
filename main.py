@@ -40,7 +40,7 @@ def scan_line(j: int, world: HittableList, cam: Camera,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 384
+    image_width = 192
     image_height = int(image_width / aspect_ratio)
     samples_per_pixel = 100
     max_depth = 50

@@ -15,7 +15,7 @@ class Img:
     def write_pixel(self, w: int, h: int, pixel_color: Color,
                     samples_per_pixel: int) -> None:
         color: Color = pixel_color / samples_per_pixel
-        self.frame[h][w] = color.clamp(0, 0.999).e
+        self.frame[h][w] = color.clamp(0, 0.999).gamma(2).e
 
     def save(self, path: str, show: bool = False) -> None:
         im = Image.fromarray(np.uint8(self.frame * 255))
