@@ -20,7 +20,7 @@ def ray_color(r: Ray, world: Hittable) -> Color:
     return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
 
-def write_pic(j: int, world: HittableList,
+def scan_line(j: int, world: HittableList,
               image_width: int, image_height: int,
               origin: Point3, lower_left_corner: Point3,
               horizontal: Vec3, vertical: Vec3) -> Img:
@@ -37,9 +37,8 @@ def write_pic(j: int, world: HittableList,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 640
+    image_width = 256
     image_height = int(image_width / aspect_ratio)
-    final_img = Img(image_width, image_height)
 
     origin = Point3(0, 0, 0)
     horizontal = Vec3(4, 0, 0)
@@ -53,13 +52,15 @@ def main() -> None:
 
     n_processer = multiprocessing.cpu_count()
     img_list: List[Img] = Parallel(n_jobs=n_processer)(
-        delayed(write_pic)(
+        delayed(scan_line)(
             j, world,
             image_width, image_height,
             origin, lower_left_corner,
             horizontal, vertical
         ) for j in range(image_height-1, -1, -1)
     )
+
+    final_img = Img(image_width, image_height)
     final_img.set_array(
         np.concatenate([img.frame for img in img_list])
     )
