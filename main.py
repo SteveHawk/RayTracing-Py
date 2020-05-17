@@ -13,7 +13,7 @@ from utils.camera import Camera
 
 
 def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
-    rec = world.hit(r, 0, np.inf)
+    rec = world.hit(r, 0.001, np.inf)
     if rec is not None:
         target: Point3 = rec.p + rec.normal + Point3.random_in_unit_sphere()
         return ray_color(Ray(rec.p, target-rec.p), world, depth-1) * 0.5
