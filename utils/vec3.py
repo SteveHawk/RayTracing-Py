@@ -41,9 +41,9 @@ class Vec3:
     def __mul__(self, v: Union[Vec3, int, float]) -> Vec3:
         if isinstance(v, Vec3):
             return Vec3(*(self.e * v.e))
-        elif isinstance(v, (int, float)):
+        elif isinstance(v, (int, float, np.floating)):
             return Vec3(*(self.e * v))
-        raise NotImplementedError
+        raise TypeError
 
     def __matmul__(self, v: Vec3) -> float:
         return self.e @ v.e
@@ -58,10 +58,10 @@ class Vec3:
     def __imul__(self, v: Union[Vec3, int, float]) -> Vec3:
         if isinstance(v, Vec3):
             self.e *= v.e
-        elif isinstance(v, (int, float)):
+        elif isinstance(v, (int, float, np.floating)):
             self.e *= v
         else:
-            return NotImplementedError
+            return TypeError
         return self
 
     def __itruediv__(self, t: float) -> Vec3:
