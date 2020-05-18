@@ -18,7 +18,10 @@ def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
 
     rec = world.hit(r, 0.001, np.inf)
     if rec is not None:
+        # Lambertian reflection
         target: Point3 = rec.p + rec.normal + Vec3.random_unit_vector()
+        # Hemisphere reflection
+        # target: Point3 = rec.p + Vec3.random_in_hemisphere(rec.normal)
         return ray_color(Ray(rec.p, target-rec.p), world, depth-1) * 0.5
 
     unit_direction: Vec3 = r.direction().unit_vector()

@@ -107,6 +107,14 @@ class Vec3:
         r: float = np.sqrt(1 - z**2)
         return Vec3(r*np.cos(a), r*np.sin(a), z)
 
+    @staticmethod
+    def random_in_hemisphere(normal: Vec3) -> Vec3:
+        in_unit_sphere: Vec3 = Vec3.random_in_unit_sphere()
+        if in_unit_sphere @ normal > 0:
+            return in_unit_sphere
+        else:
+            return -in_unit_sphere
+
 
 # Type aliases for Vec3
 Point3 = Vec3  # 3D point
