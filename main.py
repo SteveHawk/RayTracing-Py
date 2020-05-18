@@ -10,6 +10,7 @@ from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
 from utils.rtweekend import random_float
 from utils.camera import Camera
+from utils.material import Lambertian, Metal
 
 
 def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
@@ -18,11 +19,11 @@ def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
 
     rec: Optional[HitRecord] = world.hit(r, 0.001, np.inf)
     if rec is not None:
-        # Lambertian reflection
-        target: Point3 = rec.p + rec.normal + Vec3.random_unit_vector()
-        # Hemisphere reflection
-        # target: Point3 = rec.p + Vec3.random_in_hemisphere(rec.normal)
-        return ray_color(Ray(rec.p, target-rec.p), world, depth-1) * 0.5
+        scatter_result = rec.material.scatter(r, rec)
+        if scatter_result is not None:
+            scattered, attenuation = scatter_result
+            return attenuation * ray_color(scattered, world, depth-1)
+        return Color(0, 0, 0)
 
     unit_direction: Vec3 = r.direction().unit_vector()
     t = (unit_direction.y() + 1) * 0.5
@@ -53,8 +54,22 @@ def main() -> None:
     max_depth = 50
 
     world = HittableList()
-    world.add(Sphere(Point3(0, 0, -1), 0.5))
-    world.add(Sphere(Point3(0, -100.5, -1), 100))
+    world.add(Sphere(
+        Point3(0, 0, -1), 0.5,
+        Lambertian(Color(0.7, 0.3, 0.3))
+    ))
+    world.add(Sphere(
+        Point3(0, -100.5, -1), 100,
+        Lambertian(Color(0.8, 0.8, 0))
+    ))
+    world.add(Sphere(
+        Point3(1, 0, -1), 0.5,
+        Metal(Color(0.8, 0.6, 0.2))
+    ))
+    world.add(Sphere(
+        Point3(-1, 0, -1), 0.5,
+        Metal(Color(0.8, 0.8, 0.8))
+    ))
 
     cam = Camera(aspect_ratio)
 

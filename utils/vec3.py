@@ -84,6 +84,9 @@ class Vec3:
     def gamma(self, gamma: float) -> Vec3:
         return Vec3(*(self.e ** (1 / gamma)))
 
+    def reflect(self, n: Vec3) -> Vec3:
+        return self - (n * (self @ n)) * 2
+
     @staticmethod
     def random(_min: float = None, _max: float = None) -> Vec3:
         return Vec3(
