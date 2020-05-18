@@ -7,7 +7,7 @@ from utils.rtweekend import clamp
 
 class Img:
     def __init__(self, w: int, h: int) -> None:
-        self.frame: np.ndarray = np.zeros((h, w, 3), dtype=np.double)
+        self.frame: np.ndarray = np.zeros((h, w, 3), dtype=np.float32)
 
     def set_array(self, array: np.ndarray) -> None:
         self.frame = array

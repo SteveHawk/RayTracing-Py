@@ -6,7 +6,7 @@ from utils.rtweekend import random_float, clamp
 
 class Vec3:
     def __init__(self, e0: float = 0, e1: float = 0, e2: float = 0) -> None:
-        self.e: np.ndarray = np.array([e0, e1, e2], dtype=np.double)
+        self.e: np.ndarray = np.array([e0, e1, e2], dtype=np.float32)
 
     def x(self) -> float:
         return self.e[0]

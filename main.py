@@ -13,10 +13,14 @@ from utils.camera import Camera
 
 
 def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
+    if depth <= 0:
+        return Color(0, 0, 0)
+
     rec = world.hit(r, 0.001, np.inf)
     if rec is not None:
         target: Point3 = rec.p + rec.normal + Point3.random_in_unit_sphere()
         return ray_color(Ray(rec.p, target-rec.p), world, depth-1) * 0.5
+
     unit_direction: Vec3 = r.direction().unit_vector()
     t = (unit_direction.y() + 1) * 0.5
     return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
@@ -40,7 +44,7 @@ def scan_line(j: int, world: HittableList, cam: Camera,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 192
+    image_width = 256
     image_height = int(image_width / aspect_ratio)
     samples_per_pixel = 100
     max_depth = 50
