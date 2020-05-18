@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
+from utils.material import Material
 
 
 class HitRecord:
-    def __init__(self, point: Point3, t: float) -> None:
+    def __init__(self, point: Point3, t: float, mat: Material) -> None:
         self.p = point
         self.t = t
+        self.material = mat
         self.normal: Vec3
         self.front_face: bool
 

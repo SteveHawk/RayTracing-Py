@@ -3,12 +3,14 @@ from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
 from utils.hittable import Hittable, HitRecord
+from utils.material import Material
 
 
 class Sphere(Hittable):
-    def __init__(self, center: Point3 = Point3(), r: float = 0):
+    def __init__(self, center: Point3, r: float, mat: Material) -> None:
         self.center = center
         self.radius = r
+        self.material = mat
 
     def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
         oc: Vec3 = r.origin() - self.center
@@ -31,6 +33,9 @@ class Sphere(Hittable):
 
             point: Point3 = r.at(t)
             outward_normal: Vec3 = (point - self.center) / self.radius
-            return HitRecord(point, t).set_face_normal(r, outward_normal)
+
+            rec = HitRecord(point, t, self.material)
+            rec.set_face_normal(r, outward_normal)
+            return rec
 
         return None

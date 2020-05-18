@@ -1,7 +1,7 @@
 import numpy as np  # type: ignore
 import multiprocessing
 from joblib import Parallel, delayed  # type: ignore
-from typing import List
+from typing import List, Optional
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import Ray
@@ -16,7 +16,7 @@ def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
     if depth <= 0:
         return Color(0, 0, 0)
 
-    rec = world.hit(r, 0.001, np.inf)
+    rec: Optional[HitRecord] = world.hit(r, 0.001, np.inf)
     if rec is not None:
         # Lambertian reflection
         target: Point3 = rec.p + rec.normal + Vec3.random_unit_vector()
