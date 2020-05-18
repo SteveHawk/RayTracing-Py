@@ -100,6 +100,13 @@ class Vec3:
                 continue
             return p
 
+    @staticmethod
+    def random_unit_vector() -> Vec3:
+        a: float = random_float(0, 2 * np.pi)
+        z: float = random_float(-1, 1)
+        r: float = np.sqrt(1 - z**2)
+        return Vec3(r*np.cos(a), r*np.sin(a), z)
+
 
 # Type aliases for Vec3
 Point3 = Vec3  # 3D point
