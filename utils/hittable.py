@@ -3,7 +3,10 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
-from utils.material import Material
+
+import typing
+if typing.TYPE_CHECKING:
+    from utils.material import Material
 
 
 class HitRecord:
