@@ -37,12 +37,14 @@ class Hemisphere(Material):
 
 
 class Metal(Material):
-    def __init__(self, a: Color) -> None:
+    def __init__(self, a: Color, f: float) -> None:
         self.albedo = a
+        self.fuzz = f if f < 1 else 1
 
     def scatter(self, r_in: Ray, rec: HitRecord) \
             -> Optional[Tuple[Ray, Color]]:
-        reflected: Vec3 = r_in.direction().unit_vector().reflect(rec.normal)
+        reflected: Vec3 = r_in.direction().unit_vector().reflect(rec.normal) \
+            + Vec3.random_in_unit_sphere() * self.fuzz
         scattered = Ray(rec.p, reflected)
         attenuation = self.albedo
         if scattered.direction() @ rec.normal > 0:

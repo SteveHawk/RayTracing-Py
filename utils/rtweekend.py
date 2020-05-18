@@ -1,5 +1,6 @@
-import random
 import numpy as np  # type: ignore
+import random
+random.seed()
 
 
 # Utility Functions
@@ -8,7 +9,6 @@ def degrees_to_radians(degrees: float) -> float:
 
 
 def random_float(_min: float = None, _max: float = None) -> float:
-    random.seed()
     if _min is None and _max is None:
         return random.random()
     elif isinstance(_min, (int, float)) and isinstance(_max, (int, float)):

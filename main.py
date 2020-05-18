@@ -64,11 +64,11 @@ def main() -> None:
     ))
     world.add(Sphere(
         Point3(1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.6, 0.2))
+        Metal(Color(0.8, 0.6, 0.2), 0.3)
     ))
     world.add(Sphere(
         Point3(-1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.8, 0.8))
+        Metal(Color(0.8, 0.8, 0.8), 1.0)
     ))
 
     cam = Camera(aspect_ratio)
