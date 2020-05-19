@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional
+import numpy as np  # type: ignore
 from utils.ray import Ray
 from utils.vec3 import Vec3, Color
 from utils.hittable import HitRecord
@@ -50,3 +51,32 @@ class Metal(Material):
         if scattered.direction() @ rec.normal > 0:
             return scattered, attenuation
         return None
+
+
+class Dielectric(Material):
+    def __init__(self, ri: float) -> None:
+        self.ref_idx = ri  # refractive indices
+
+    def scatter(self, r_in: Ray, rec: HitRecord) \
+            -> Optional[Tuple[Ray, Color]]:
+        if rec.front_face:
+            etai_over_etat = 1 / self.ref_idx
+        else:
+            etai_over_etat = self.ref_idx
+
+        unit_direction: Vec3 = r_in.direction().unit_vector()
+        cos_theta: float = min(-unit_direction @ rec.normal, 1)
+        sin_theta: float = np.sqrt(1 - cos_theta**2)
+        if etai_over_etat * sin_theta > 1:
+            # total internal reflection
+            reflected: Vec3 = unit_direction.reflect(rec.normal)
+            scattered = Ray(rec.p, reflected)
+        else:
+            # refraction
+            refracted: Vec3 = unit_direction.refract(
+                rec.normal, etai_over_etat
+            )
+            scattered = Ray(rec.p, refracted)
+
+        attenuation = Color(1, 1, 1)
+        return scattered, attenuation

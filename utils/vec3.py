@@ -87,6 +87,13 @@ class Vec3:
     def reflect(self, n: Vec3) -> Vec3:
         return self - (n * (self @ n)) * 2
 
+    def refract(self, normal: Vec3, etai_over_etat: float) -> Vec3:
+        cos_theta: float = -self @ normal
+        r_out_parallel: Vec3 = (self + normal*cos_theta) * etai_over_etat
+        r_out_prep: Vec3 = \
+            normal * (-np.sqrt(1 - r_out_parallel.length_squared()))
+        return r_out_parallel + r_out_prep
+
     @staticmethod
     def random(_min: float = None, _max: float = None) -> Vec3:
         return Vec3(

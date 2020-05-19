@@ -10,7 +10,7 @@ from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
 from utils.rtweekend import random_float
 from utils.camera import Camera
-from utils.material import Lambertian, Metal
+from utils.material import Lambertian, Metal, Dielectric
 
 
 def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
@@ -56,7 +56,7 @@ def main() -> None:
     world = HittableList()
     world.add(Sphere(
         Point3(0, 0, -1), 0.5,
-        Lambertian(Color(0.7, 0.3, 0.3))
+        Lambertian(Color(0.1, 0.2, 0.5))
     ))
     world.add(Sphere(
         Point3(0, -100.5, -1), 100,
@@ -64,11 +64,11 @@ def main() -> None:
     ))
     world.add(Sphere(
         Point3(1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.6, 0.2), 0.3)
+        Metal(Color(0.8, 0.6, 0.2), 0)
     ))
     world.add(Sphere(
         Point3(-1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.8, 0.8), 1.0)
+        Dielectric(1.5)
     ))
 
     cam = Camera(aspect_ratio)
