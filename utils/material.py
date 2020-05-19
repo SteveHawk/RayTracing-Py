@@ -4,6 +4,7 @@ import numpy as np  # type: ignore
 from utils.ray import Ray
 from utils.vec3 import Vec3, Color
 from utils.hittable import HitRecord
+from utils.rtweekend import random_float
 
 
 class Material(ABC):
@@ -67,7 +68,9 @@ class Dielectric(Material):
         unit_direction: Vec3 = r_in.direction().unit_vector()
         cos_theta: float = min(-unit_direction @ rec.normal, 1)
         sin_theta: float = np.sqrt(1 - cos_theta**2)
-        if etai_over_etat * sin_theta > 1:
+        reflect_prob: float = self.schlick(cos_theta, etai_over_etat)
+
+        if etai_over_etat * sin_theta > 1 or random_float() < reflect_prob:
             # total internal reflection
             reflected: Vec3 = unit_direction.reflect(rec.normal)
             scattered = Ray(rec.p, reflected)
@@ -80,3 +83,9 @@ class Dielectric(Material):
 
         attenuation = Color(1, 1, 1)
         return scattered, attenuation
+
+    @staticmethod
+    def schlick(cosine: float, ref_idx: float) -> float:
+        r0 = (1 - ref_idx) / (1 + ref_idx)
+        r0 **= 2
+        return r0 + (1 - r0) * ((1 - cosine) ** 5)

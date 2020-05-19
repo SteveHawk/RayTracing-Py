@@ -64,10 +64,14 @@ def main() -> None:
     ))
     world.add(Sphere(
         Point3(1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.6, 0.2), 0)
+        Metal(Color(0.8, 0.6, 0.2), 0.3)
     ))
     world.add(Sphere(
         Point3(-1, 0, -1), 0.5,
+        Dielectric(1.5)
+    ))
+    world.add(Sphere(
+        Point3(-1, 0, -1), -0.45,
         Dielectric(1.5)
     ))
 
