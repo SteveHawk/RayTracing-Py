@@ -50,8 +50,8 @@ def main() -> None:
     aspect_ratio = 16 / 9
     image_width = 256
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 100
-    max_depth = 50
+    samples_per_pixel = 5
+    max_depth = 10
 
     world = HittableList()
     world.add(Sphere(
@@ -75,7 +75,14 @@ def main() -> None:
         Dielectric(1.5)
     ))
 
-    cam = Camera(aspect_ratio)
+    # cam = Camera(
+    #     Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0),
+    #     90, aspect_ratio
+    # )
+    cam = Camera(
+        Point3(0.5, 0, 0), Point3(0.5, 0, -1), Vec3(0, 1, 0),
+        90, aspect_ratio
+    )
 
     n_processer = multiprocessing.cpu_count()
     img_list: List[Img] = Parallel(n_jobs=n_processer)(

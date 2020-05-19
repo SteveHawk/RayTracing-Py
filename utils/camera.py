@@ -5,7 +5,8 @@ from utils.rtweekend import degrees_to_radians
 
 
 class Camera:
-    def __init__(self, vfov: float, aspect_ratio: float) -> None:
+    def __init__(self, lookfrom: Point3, lookat: Point3, vup: Vec3,
+                 vfov: float, aspect_ratio: float) -> None:
         """
         vfov: vertical field-of-view in degress
         """
@@ -13,14 +14,16 @@ class Camera:
         h: float = np.tan(theta / 2)
         viewport_height: float = 2 * h
         viewport_width: float = aspect_ratio * viewport_height
-        focal_length: float = 1
 
-        self.origin = Point3(0, 0, 0)
-        self.horizontal = Vec3(viewport_width, 0, 0)
-        self.vertical = Vec3(0, viewport_height, 0)
-        self.distance = Vec3(0, 0, focal_length)
+        w: Vec3 = (lookfrom - lookat).unit_vector()
+        u: Vec3 = vup.cross(w).unit_vector()
+        v: Vec3 = w.cross(u)
+
+        self.origin = lookfrom
+        self.horizontal = u * viewport_width
+        self.vertical = v * viewport_height
         self.lower_left_corner: Point3 = (
-            self.origin - self.horizontal/2 - self.vertical/2 - self.distance
+            self.origin - self.horizontal/2 - self.vertical/2 - w
         )
 
     def get_ray(self, u: float, v: float) -> Ray:
