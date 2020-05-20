@@ -4,6 +4,8 @@ This is a python implementation of the [Ray Tracing in One Weekend](https://rayt
 
 **Note: This project is still under construction.**
 
+**Progress: Contents within the first book has finished.**
+
 ## Requirements
 
 - Python >= 3.7
