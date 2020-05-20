@@ -125,6 +125,14 @@ class Vec3:
         else:
             return -in_unit_sphere
 
+    @staticmethod
+    def random_in_unit_disk():
+        while True:
+            p = Vec3(random_float(-1, 1), random_float(-1, 1), 0)
+            if p.length_squared() >= 1:
+                continue
+            return p
+
 
 # Type aliases for Vec3
 Point3 = Vec3  # 3D point

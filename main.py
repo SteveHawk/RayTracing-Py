@@ -75,9 +75,15 @@ def main() -> None:
         Dielectric(1.5)
     ))
 
+    lookfrom = Point3(3, 3, 2)
+    lookat = Point3(0, 0, -1)
+    vup = Vec3(0, 1, 0)
+    vfov = 20
+    dist_to_focus: float = (lookfrom - lookat).length()
+    aperture: float = 2
+
     cam = Camera(
-        Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0),
-        20, aspect_ratio
+        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus
     )
 
     n_processer = multiprocessing.cpu_count()
