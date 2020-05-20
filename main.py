@@ -1,5 +1,6 @@
 import numpy as np  # type: ignore
 import multiprocessing
+import time
 from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional
 from utils.vec3 import Vec3, Point3, Color
@@ -30,6 +31,68 @@ def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
     return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
 
+def three_ball_scene() -> HittableList:
+    world = HittableList()
+    world.add(Sphere(
+        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5))
+    ))
+    world.add(Sphere(
+        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0))
+    ))
+    world.add(Sphere(
+        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3)
+    ))
+    world.add(Sphere(
+        Point3(-1, 0, -1), 0.5, Dielectric(1.5)
+    ))
+    world.add(Sphere(
+        Point3(-1, 0, -1), -0.45, Dielectric(1.5)
+    ))
+    return world
+
+
+def random_scene() -> HittableList:
+    world = HittableList()
+
+    ground_material = Lambertian(Color(0.5, 0.5, 0.5))
+    world.add(Sphere(Point3(0, -1000, 0), 1000, ground_material))
+
+    for a in range(-11, 11):
+        for b in range(-11, 11):
+            choose_mat = random_float()
+            center = Point3(
+                a + 0.9*random_float(), 0.2, b + 0.9*random_float()
+            )
+
+            if (center - Vec3(4, 0.2, 0)).length() > 0.9:
+                if choose_mat < 0.8:
+                    # Diffuse
+                    albedo = Color.random() * Color.random()
+                    sphere_material_diffuse = Lambertian(albedo)
+                    world.add(Sphere(center, 0.2, sphere_material_diffuse))
+                elif choose_mat < 0.95:
+                    # Metal
+                    albedo = Color.random(0.5, 1)
+                    fuzz = random_float(0, 0.5)
+                    sphere_material_metal = Metal(albedo, fuzz)
+                    world.add(Sphere(center, 0.2, sphere_material_metal))
+                else:
+                    # Glass
+                    sphere_material_glass = Dielectric(1.5)
+                    world.add(Sphere(center, 0.2, sphere_material_glass))
+
+    material_1 = Dielectric(1.5)
+    world.add(Sphere(Point3(0, 1, 0), 1, material_1))
+
+    material_2 = Lambertian(Color(0.4, 0.2, 0.1))
+    world.add(Sphere(Point3(-4, 1, 0), 1, material_2))
+
+    material_3 = Metal(Color(0.7, 0.6, 0.5), 0)
+    world.add(Sphere(Point3(4, 1, 0), 1, material_3))
+
+    return world
+
+
 def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
@@ -50,41 +113,23 @@ def main() -> None:
     aspect_ratio = 16 / 9
     image_width = 256
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 50
-    max_depth = 20
+    samples_per_pixel = 20
+    max_depth = 10
 
-    world = HittableList()
-    world.add(Sphere(
-        Point3(0, 0, -1), 0.5,
-        Lambertian(Color(0.1, 0.2, 0.5))
-    ))
-    world.add(Sphere(
-        Point3(0, -100.5, -1), 100,
-        Lambertian(Color(0.8, 0.8, 0))
-    ))
-    world.add(Sphere(
-        Point3(1, 0, -1), 0.5,
-        Metal(Color(0.8, 0.6, 0.2), 0.3)
-    ))
-    world.add(Sphere(
-        Point3(-1, 0, -1), 0.5,
-        Dielectric(1.5)
-    ))
-    world.add(Sphere(
-        Point3(-1, 0, -1), -0.45,
-        Dielectric(1.5)
-    ))
+    world: HittableList = three_ball_scene()
 
-    lookfrom = Point3(3, 3, 2)
-    lookat = Point3(0, 0, -1)
+    lookfrom = Point3(13, 2, 3)
+    lookat = Point3(0, 0, 0)
     vup = Vec3(0, 1, 0)
     vfov = 20
-    dist_to_focus: float = (lookfrom - lookat).length()
-    aperture: float = 2
-
+    dist_to_focus: float = 10
+    aperture: float = 0.1
     cam = Camera(
         lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus
     )
+
+    print("Start rendering.")
+    start_time = time.time()
 
     n_processer = multiprocessing.cpu_count()
     img_list: List[Img] = Parallel(n_jobs=n_processer)(
@@ -100,7 +145,8 @@ def main() -> None:
         np.concatenate([img.frame for img in img_list])
     )
 
-    print("\nDone.")
+    end_time = time.time()
+    print(f"\nDone. Total time: {round(end_time - start_time, 1)} s.")
     final_img.save("./test.png", True)
 
 
