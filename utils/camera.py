@@ -19,15 +19,16 @@ class Camera:
         u: Vec3 = vup.cross(w).unit_vector()
         v: Vec3 = w.cross(u)
 
-        self.origin = lookfrom
-        self.horizontal = u * viewport_width
-        self.vertical = v * viewport_height
+        self.origin: Point3 = lookfrom
+        self.horizontal: Vec3 = u * viewport_width
+        self.vertical: Vec3 = v * viewport_height
         self.lower_left_corner: Point3 = (
             self.origin - self.horizontal/2 - self.vertical/2 - w
         )
 
     def get_ray(self, u: float, v: float) -> Ray:
         return Ray(
-            self.origin,
-            self.lower_left_corner + self.horizontal*u + self.vertical*v
+            self.origin, (self.lower_left_corner
+                          + self.horizontal*u + self.vertical*v
+                          - self.origin)
         )

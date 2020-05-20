@@ -13,7 +13,7 @@ from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
 
 
-def ray_color(r: Ray, world: Hittable, depth: int) -> Color:
+def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
     if depth <= 0:
         return Color(0, 0, 0)
 
@@ -50,8 +50,8 @@ def main() -> None:
     aspect_ratio = 16 / 9
     image_width = 256
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 5
-    max_depth = 10
+    samples_per_pixel = 50
+    max_depth = 20
 
     world = HittableList()
     world.add(Sphere(
@@ -75,13 +75,9 @@ def main() -> None:
         Dielectric(1.5)
     ))
 
-    # cam = Camera(
-    #     Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0),
-    #     90, aspect_ratio
-    # )
     cam = Camera(
-        Point3(0.5, 0, 0), Point3(0.5, 0, -1), Vec3(0, 1, 0),
-        90, aspect_ratio
+        Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0),
+        20, aspect_ratio
     )
 
     n_processer = multiprocessing.cpu_count()
