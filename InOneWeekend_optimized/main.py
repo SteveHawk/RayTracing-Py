@@ -100,13 +100,11 @@ def scan_line(j: int, world: HittableList, cam: Camera,
     row_pixel_color: List[Color] = [Color(0, 0, 0) for i in range(image_width)]
 
     for s in range(samples_per_pixel):
-        u: List[float] = (random_float_list(image_width)
-                          + list(range(image_width))) / (image_width - 1)
-        v: List[float] = (random_float_list(image_width)
-                          + j) / (image_height - 1)
-
-        vfunc_get_ray = np.vectorize(cam.get_ray)
-        r: List[Ray] = vfunc_get_ray(u, v)
+        u: np.ndarray = (random_float_list(image_width)
+                         + list(range(image_width))) / (image_width - 1)
+        v: np.ndarray = (random_float_list(image_width)
+                         + j) / (image_height - 1)
+        r: List[Ray] = cam.get_ray(u, v)
 
         vfunc_ray_color = np.vectorize(ray_color)
         row_pixel_color += vfunc_ray_color(r, world, max_depth)

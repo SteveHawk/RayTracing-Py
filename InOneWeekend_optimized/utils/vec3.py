@@ -114,12 +114,6 @@ class Vec3:
         z = r * cosPhi
         return Vec3(x, y, z)
 
-        # while True:
-        #     p: Vec3 = Vec3.random(-1, 1)
-        #     if p.length_squared() >= 1:
-        #         continue
-        #     return p
-
     @staticmethod
     def random_unit_vector() -> Vec3:
         a: float = random_float(0, 2 * np.pi)
@@ -136,17 +130,10 @@ class Vec3:
             return -in_unit_sphere
 
     @staticmethod
-    def random_in_unit_disk():
-        r = np.sqrt(random_float())
-        theta = random_float() * 2 * np.pi
-        p = Vec3(r*np.cos(theta), r*np.sin(theta), 0)
-        return p
-
-        # while True:
-        #     p = Vec3(random_float(-1, 1), random_float(-1, 1), 0)
-        #     if p.length_squared() >= 1:
-        #         continue
-        #     return p
+    def random_in_unit_disk(size: int) -> np.ndarray:
+        r = np.sqrt(random_float_list(size))
+        theta = random_float_list(size) * 2 * np.pi
+        return np.array([r*np.cos(theta), r*np.sin(theta)])
 
 
 # Type aliases for Vec3
