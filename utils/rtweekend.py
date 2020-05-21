@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np  # type: ignore
 rng = np.random.default_rng()
 
@@ -13,5 +12,5 @@ def random_float(_min: float = 0, _max: float = 1) -> float:
 
 
 def random_float_list(size: int, _min: float = 0, _max: float = 1) \
-        -> List[float]:
+        -> np.ndarray:
     return rng.uniform(_min, _max, size)

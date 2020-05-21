@@ -9,7 +9,7 @@ from utils.ray import Ray
 from utils.sphere import Sphere
 from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
-from utils.rtweekend import random_float
+from utils.rtweekend import random_float, random_float_list
 from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
 
@@ -97,14 +97,21 @@ def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
     img = Img(image_width, 1)
-    for i in range(image_width):
-        pixel_color = Color(0, 0, 0)
-        for s in range(samples_per_pixel):
-            u: float = (i + random_float()) / (image_width - 1)
-            v: float = (j + random_float()) / (image_height - 1)
-            r: Ray = cam.get_ray(u, v)
-            pixel_color += ray_color(r, world, max_depth)
-        img.write_pixel(i, 0, pixel_color, samples_per_pixel)
+    row_pixel_color: List[Color] = [Color(0, 0, 0) for i in range(image_width)]
+
+    for s in range(samples_per_pixel):
+        u: List[float] = (random_float_list(image_width)
+                          + list(range(image_width))) / (image_width - 1)
+        v: List[float] = (random_float_list(image_width)
+                          + j) / (image_height - 1)
+
+        vfunc_get_ray = np.vectorize(cam.get_ray)
+        r: List[Ray] = vfunc_get_ray(u, v)
+
+        vfunc_ray_color = np.vectorize(ray_color)
+        row_pixel_color += vfunc_ray_color(r, world, max_depth)
+
+    img.write_pixel_list(0, row_pixel_color, samples_per_pixel)
     print(f"Scanlines remaining: {j} ", end="\r")
     return img
 

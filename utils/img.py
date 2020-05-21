@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
+from typing import List
 from utils.vec3 import Color
 
 
@@ -15,6 +16,13 @@ class Img:
                     samples_per_pixel: int) -> None:
         color: Color = pixel_color / samples_per_pixel
         self.frame[h][w] = color.clamp(0, 0.999).gamma(2).e
+
+    def write_pixel_list(self, h: int, pixel_color_list: List[Color],
+                         samples_per_pixel: int) -> None:
+        color = np.array([c.e for c in pixel_color_list])
+        color /= samples_per_pixel
+        gamma: float = 2
+        self.frame[h] = np.clip(color, 0, 0.999) ** (1 / gamma)
 
     def save(self, path: str, show: bool = False) -> None:
         im = Image.fromarray(np.uint8(self.frame * 255))
