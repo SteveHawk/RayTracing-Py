@@ -1,7 +1,7 @@
 import numpy as np  # type: ignore
 from typing import List
 from utils.vec3 import Vec3, Point3
-from utils.ray import Ray
+from utils.ray import RayList
 from utils.rtweekend import degrees_to_radians
 
 
@@ -30,7 +30,7 @@ class Camera:
         )
         self.lens_radius: float = aperture / 2
 
-    def get_ray(self, s: np.ndarray, t: np.ndarray) -> List[Ray]:
+    def get_ray(self, s: np.ndarray, t: np.ndarray) -> RayList:
         if len(s) != len(t):
             raise ValueError
         rd: np.ndarray = Vec3.random_in_unit_disk(len(s)) * self.lens_radius
@@ -53,5 +53,4 @@ class Camera:
             - self.origin.e - offset_list
         )
 
-        return [Ray(Point3(*origin), Vec3(*direction))
-                for origin, direction in zip(origin_list, direction_list)]
+        return RayList(origin_list, direction_list)

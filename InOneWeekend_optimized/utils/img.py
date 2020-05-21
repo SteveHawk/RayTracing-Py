@@ -17,10 +17,9 @@ class Img:
         color: Color = pixel_color / samples_per_pixel
         self.frame[h][w] = color.clamp(0, 0.999).gamma(2).e
 
-    def write_pixel_list(self, h: int, pixel_color_list: List[Color],
+    def write_pixel_list(self, h: int, pixel_color_list: np.ndarray,
                          samples_per_pixel: int) -> None:
-        color = np.array([c.e for c in pixel_color_list])
-        color /= samples_per_pixel
+        color = pixel_color_list / samples_per_pixel
         gamma: float = 2
         self.frame[h] = np.clip(color, 0, 0.999) ** (1 / gamma)
 

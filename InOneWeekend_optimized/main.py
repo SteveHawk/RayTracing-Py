@@ -5,7 +5,7 @@ from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
-from utils.ray import Ray
+from utils.ray import RayList
 from utils.sphere import Sphere
 from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
@@ -14,7 +14,7 @@ from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
 
 
-def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
+def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
     if depth <= 0:
         return Color(0, 0, 0)
 
@@ -97,17 +97,15 @@ def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
     img = Img(image_width, 1)
-    row_pixel_color: List[Color] = [Color(0, 0, 0) for i in range(image_width)]
+    row_pixel_color = np.tile(np.array([0, 0, 0]), (image_width, 1))
 
     for s in range(samples_per_pixel):
         u: np.ndarray = (random_float_list(image_width)
                          + list(range(image_width))) / (image_width - 1)
         v: np.ndarray = (random_float_list(image_width)
                          + j) / (image_height - 1)
-        r: List[Ray] = cam.get_ray(u, v)
-
-        vfunc_ray_color = np.vectorize(ray_color)
-        row_pixel_color += vfunc_ray_color(r, world, max_depth)
+        r: RayList = cam.get_ray(u, v)
+        row_pixel_color += ray_color(r, world, max_depth)
 
     img.write_pixel_list(0, row_pixel_color, samples_per_pixel)
     print(f"Scanlines remaining: {j} ", end="\r")
