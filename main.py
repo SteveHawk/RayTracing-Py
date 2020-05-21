@@ -116,7 +116,7 @@ def main() -> None:
     samples_per_pixel = 20
     max_depth = 10
 
-    world: HittableList = random_scene()
+    world: HittableList = three_ball_scene()
 
     lookfrom = Point3(13, 2, 3)
     lookat = Point3(0, 0, 0)

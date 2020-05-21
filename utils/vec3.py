@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np  # type: ignore
 from typing import Union
-from utils.rtweekend import random_float, clamp
+from utils.rtweekend import random_float, random_float_list
 
 
 class Vec3:
@@ -75,11 +75,7 @@ class Vec3:
         return (self / self.length())
 
     def clamp(self, _min: float, _max: float) -> Vec3:
-        return Vec3(
-            clamp(self.e[0], _min, _max),
-            clamp(self.e[1], _min, _max),
-            clamp(self.e[2], _min, _max)
-        )
+        return Vec3(*np.clip(self.e, _min, _max))
 
     def gamma(self, gamma: float) -> Vec3:
         return Vec3(*(self.e ** (1 / gamma)))
@@ -95,12 +91,8 @@ class Vec3:
         return r_out_parallel + r_out_prep
 
     @staticmethod
-    def random(_min: float = None, _max: float = None) -> Vec3:
-        return Vec3(
-            random_float(_min, _max),
-            random_float(_min, _max),
-            random_float(_min, _max)
-        )
+    def random(_min: float = 0, _max: float = 1) -> Vec3:
+        return Vec3(*random_float_list(3, _min, _max))
 
     @staticmethod
     def random_in_unit_sphere() -> Vec3:

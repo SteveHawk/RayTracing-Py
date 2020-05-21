@@ -2,7 +2,6 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
 from utils.vec3 import Color
-from utils.rtweekend import clamp
 
 
 class Img:
