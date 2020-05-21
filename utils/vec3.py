@@ -96,11 +96,29 @@ class Vec3:
 
     @staticmethod
     def random_in_unit_sphere() -> Vec3:
-        while True:
-            p: Vec3 = Vec3.random(-1, 1)
-            if p.length_squared() >= 1:
-                continue
-            return p
+        """
+        This method is modified from:
+        https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/#better-choice-of-spherical-coordinates
+        """
+        u = random_float()
+        v = random_float()
+        theta = u * 2 * np.pi
+        phi = np.arccos(2 * v - 1)
+        r = np.cbrt(random_float())
+        sinTheta = np.sin(theta)
+        cosTheta = np.cos(theta)
+        sinPhi = np.sin(phi)
+        cosPhi = np.cos(phi)
+        x = r * sinPhi * cosTheta
+        y = r * sinPhi * sinTheta
+        z = r * cosPhi
+        return Vec3(x, y, z)
+
+        # while True:
+        #     p: Vec3 = Vec3.random(-1, 1)
+        #     if p.length_squared() >= 1:
+        #         continue
+        #     return p
 
     @staticmethod
     def random_unit_vector() -> Vec3:
@@ -119,11 +137,16 @@ class Vec3:
 
     @staticmethod
     def random_in_unit_disk():
-        while True:
-            p = Vec3(random_float(-1, 1), random_float(-1, 1), 0)
-            if p.length_squared() >= 1:
-                continue
-            return p
+        r = np.sqrt(random_float())
+        theta = random_float() * 2 * np.pi
+        p = Vec3(r*np.cos(theta), r*np.sin(theta), 0)
+        return p
+
+        # while True:
+        #     p = Vec3(random_float(-1, 1), random_float(-1, 1), 0)
+        #     if p.length_squared() >= 1:
+        #         continue
+        #     return p
 
 
 # Type aliases for Vec3
