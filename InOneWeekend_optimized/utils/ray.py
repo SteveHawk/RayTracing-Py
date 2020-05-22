@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np  # type: ignore
 from utils.vec3 import Vec3, Point3
 
@@ -30,6 +31,16 @@ class RayList:
     def direction(self) -> np.ndarray:
         return self.dir
 
+    def __len__(self) -> int:
+        return len(self.orig)
+
+    def __getitem__(self, idx: int) -> Ray:
+        return Ray(Point3(*self.orig[idx]), Vec3(*self.dir[idx]))
+
     def at(self, t: np.ndarray) -> np.ndarray:
         # t's shape: n * 1
         return self.orig + np.transpose(np.transpose(self.dir) * t)
+
+    @staticmethod
+    def single(r: Ray) -> RayList:
+        return RayList(np.array([r.orig.e]), np.array([r.dir.e]))

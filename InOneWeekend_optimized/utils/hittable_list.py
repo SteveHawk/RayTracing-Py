@@ -1,5 +1,6 @@
-from typing import List, Optional
-from utils.ray import Ray
+import numpy as np  # type: ignore
+from typing import List, Optional, Union
+from utils.ray import RayList
 from utils.hittable import Hittable, HitRecord
 
 
@@ -15,14 +16,20 @@ class HittableList(Hittable):
     def clear(self):
         self.objects.clear()
 
-    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
-        closest_so_far = t_max
-        rec: Optional[HitRecord] = None
+    def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
+            -> List[Optional[HitRecord]]:
+        if isinstance(t_max, (int, float, np.floating)):
+            closest_so_far = np.full(len(r), t_max)
+        else:
+            closest_so_far = t_max
+
+        rec: List[Optional[HitRecord]] = [None for i in range(len(r))]
 
         for obj in self.objects:
-            temp_rec = obj.hit(r, t_min, closest_so_far)
-            if temp_rec is not None:
-                closest_so_far = temp_rec.t
-                rec = temp_rec
+            temp_rec_list = obj.hit(r, t_min, closest_so_far)
+            for i, temp_rec in enumerate(temp_rec_list):
+                if temp_rec is not None:
+                    closest_so_far[i] = temp_rec.t
+                    rec[i] = temp_rec
 
         return rec

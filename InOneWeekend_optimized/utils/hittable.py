@@ -1,8 +1,9 @@
 from __future__ import annotations
+import numpy as np
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List, Union
 from utils.vec3 import Vec3, Point3
-from utils.ray import Ray
+from utils.ray import Ray, RayList
 
 import typing
 if typing.TYPE_CHECKING:
@@ -25,5 +26,6 @@ class HitRecord:
 
 class Hittable(ABC):
     @abstractmethod
-    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
+    def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
+            -> List[Optional[HitRecord]]:
         return NotImplemented

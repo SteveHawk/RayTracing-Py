@@ -16,19 +16,27 @@ from utils.material import Lambertian, Metal, Dielectric
 
 def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
     if depth <= 0:
-        return Color(0, 0, 0)
+        return np.zeros((len(r), 3))
+    result = np.empty((len(r), 3), dtype=np.float32)
 
-    rec: Optional[HitRecord] = world.hit(r, 0.001, np.inf)
-    if rec is not None:
-        scatter_result = rec.material.scatter(r, rec)
-        if scatter_result is not None:
-            scattered, attenuation = scatter_result
-            return attenuation * ray_color(scattered, world, depth-1)
-        return Color(0, 0, 0)
+    rec_list: List[Optional[HitRecord]] = world.hit(r, 0.001, np.inf)
+    for i, rec in enumerate(rec_list):
+        if rec is not None:
+            scatter_result = rec.material.scatter(r[i], rec)
+            if scatter_result is not None:
+                scattered, attenuation = scatter_result
+                result[i] = (
+                    attenuation.e
+                    * ray_color(RayList.single(scattered), world, depth-1)[0]
+                )
+            else:
+                result[i] = Color(0, 0, 0).e
+        else:
+            unit_direction: Vec3 = r[i].direction().unit_vector()
+            t = (unit_direction.y() + 1) * 0.5
+            result[i] = (Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t).e
 
-    unit_direction: Vec3 = r.direction().unit_vector()
-    t = (unit_direction.y() + 1) * 0.5
-    return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
+    return result
 
 
 def three_ball_scene() -> HittableList:
@@ -97,7 +105,10 @@ def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
     img = Img(image_width, 1)
-    row_pixel_color = np.tile(np.array([0, 0, 0]), (image_width, 1))
+    row_pixel_color = np.tile(
+        np.array([0, 0, 0], dtype=np.float32),
+        (image_width, 1)
+    )
 
     for s in range(samples_per_pixel):
         u: np.ndarray = (random_float_list(image_width)

@@ -7,7 +7,7 @@ from utils.vec3 import Color
 
 class Img:
     def __init__(self, w: int, h: int) -> None:
-        self.frame: np.ndarray = np.zeros((h, w, 3), dtype=np.float32)
+        self.frame: np.ndarray = np.empty((h, w, 3), dtype=np.float32)
 
     def set_array(self, array: np.ndarray) -> None:
         self.frame = array
