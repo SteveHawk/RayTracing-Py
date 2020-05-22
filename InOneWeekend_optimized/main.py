@@ -112,7 +112,7 @@ def scan_line(j: int, world: HittableList, cam: Camera,
 
     for s in range(samples_per_pixel):
         u: np.ndarray = (random_float_list(image_width)
-                         + list(range(image_width))) / (image_width - 1)
+                         + np.arange(image_width)) / (image_width - 1)
         v: np.ndarray = (random_float_list(image_width)
                          + j) / (image_height - 1)
         r: RayList = cam.get_ray(u, v)
