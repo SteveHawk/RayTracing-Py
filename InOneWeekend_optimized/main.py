@@ -7,7 +7,7 @@ from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import RayList
 from utils.sphere import Sphere
-from utils.hittable import Hittable, HitRecord
+from utils.hittable import Hittable, HitRecordList
 from utils.hittable_list import HittableList
 from utils.rtweekend import random_float, random_float_list
 from utils.camera import Camera
@@ -19,7 +19,7 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
         return np.zeros((len(r), 3))
     result = np.empty((len(r), 3), dtype=np.float32)
 
-    rec_list: List[Optional[HitRecord]] = world.hit(r, 0.001, np.inf)
+    rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
     for i, rec in enumerate(rec_list):
         if rec is not None:
             scatter_result = rec.material.scatter(r[i], rec)

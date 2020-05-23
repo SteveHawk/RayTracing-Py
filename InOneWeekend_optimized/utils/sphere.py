@@ -2,7 +2,7 @@ import numpy as np  # type: ignore
 from typing import Optional, Union, List
 from utils.vec3 import Vec3, Point3
 from utils.ray import RayList
-from utils.hittable import Hittable, HitRecord
+from utils.hittable import Hittable, HitRecordList
 from utils.material import Material
 
 
@@ -13,7 +13,7 @@ class Sphere(Hittable):
         self.material = mat
 
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
-            -> List[Optional[HitRecord]]:
+            -> HitRecordList:
         if isinstance(t_max, (int, float, np.floating)):
             t_max_list = np.full(len(r), t_max)
         else:
@@ -30,33 +30,16 @@ class Sphere(Hittable):
         t_0 = (-half_b - root) / a
         t_1 = (-half_b + root) / a
 
-        # t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
-        # t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
-        # t = np.where(t_0_condition, t_0, t_max_list)
-        # t = np.where(t_1_condition, t_1, t)
+        t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
+        t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
+        t = np.where(t_0_condition, t_0, t_max_list)
+        t = np.where(t_1_condition, t_1, t)
 
-        # point = r.at(t)
-        # outward_normal = (point - self.center.e) / self.radius
+        point = r.at(t)
+        outward_normal = (point - self.center.e) / self.radius
 
-        result: List[Optional[HitRecord]] = list()
-        for i, discriminant in enumerate(discriminant_list):
-            if discriminant > 0:
-                if t_min < t_0[i] < t_max_list[i]:
-                # if t_0_condition[i]:
-                    t = t_0[i]
-                elif t_min < t_1[i] < t_max_list[i]:
-                # elif t_1_condition[i]:
-                    t = t_1[i]
-                else:
-                    result.append(None)
-                    continue
+        result = HitRecordList(
+            point, t, [self.material for i in range(len(r))]
+        ).set_face_normal(r, outward_normal)
 
-                point: Point3 = r[i].at(t)
-                outward_normal: Vec3 = (point - self.center) / self.radius
-
-                rec = HitRecord(point, t, self.material)
-                rec.set_face_normal(r[i], outward_normal)
-                result.append(rec)
-            else:
-                result.append(None)
         return result
