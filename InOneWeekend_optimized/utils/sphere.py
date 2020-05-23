@@ -30,12 +30,22 @@ class Sphere(Hittable):
         t_0 = (-half_b - root) / a
         t_1 = (-half_b + root) / a
 
+        # t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
+        # t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
+        # t = np.where(t_0_condition, t_0, t_max_list)
+        # t = np.where(t_1_condition, t_1, t)
+
+        # point = r.at(t)
+        # outward_normal = (point - self.center.e) / self.radius
+
         result: List[Optional[HitRecord]] = list()
         for i, discriminant in enumerate(discriminant_list):
             if discriminant > 0:
                 if t_min < t_0[i] < t_max_list[i]:
+                # if t_0_condition[i]:
                     t = t_0[i]
                 elif t_min < t_1[i] < t_max_list[i]:
+                # elif t_1_condition[i]:
                     t = t_1[i]
                 else:
                     result.append(None)
@@ -47,7 +57,6 @@ class Sphere(Hittable):
                 rec = HitRecord(point, t, self.material)
                 rec.set_face_normal(r[i], outward_normal)
                 result.append(rec)
-                continue
-
-            result.append(None)
+            else:
+                result.append(None)
         return result
