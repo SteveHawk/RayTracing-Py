@@ -32,14 +32,14 @@ class Sphere(Hittable):
 
         t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
         t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
-        t = np.where(t_0_condition, t_0, np.nan)
+        t = np.where(t_0_condition, t_0, -1)
         t = np.where(t_1_condition, t_1, t)
 
         point = r.at(t)
         outward_normal = (point - self.center.e) / self.radius
 
         result = HitRecordList(
-            point, t, [self.material for i in range(len(r))]
+            point, t, np.full(len(r), self.material)
         ).set_face_normal(r, outward_normal)
 
         return result

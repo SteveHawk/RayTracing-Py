@@ -23,12 +23,16 @@ class HittableList(Hittable):
         else:
             closest_so_far = t_max
 
+        rec = HitRecordList(
+            np.empty((len(r), 3), dtype=np.float32),
+            closest_so_far,
+            [None for i in range(len(r))],
+            np.empty((len(r), 3), dtype=np.float32),
+            np.empty(len(r), dtype=np.bool)
+        )
         for i, obj in enumerate(self.objects):
             temp_rec_list: HitRecordList = obj.hit(r, t_min, closest_so_far)
-            if i == 0:
-                rec = temp_rec_list
-                continue
-            rec.update(temp_rec_list, closest_so_far)
+            rec.update(temp_rec_list)
             closest_so_far = rec.t
 
         return rec

@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 
 class HitRecord:
     def __init__(self, point: Point3, t: float, mat: Material,
-                 normal: Vec3 = None, front_face: bool = None) -> None:
+                 normal: Vec3 = Vec3(), front_face: bool = False) -> None:
         self.p = point
         self.t = t
         self.material = mat
@@ -26,27 +26,32 @@ class HitRecord:
 
 
 class HitRecordList:
-    def __init__(self, point: np.ndarray, t: np.ndarray, mat: List[Material]) \
-            -> None:
+    def __init__(self, point: np.ndarray, t: np.ndarray,
+                 mat: List[Optional[Material]],
+                 normal: np.ndarray = np.array([]),
+                 front_face: np.ndarray = np.array([])) -> None:
         self.p = point
         self.t = t
         self.material = mat
-        self.normal: np.ndarray
-        self.front_face: np.ndarray
+        self.normal = normal
+        self.front_face = front_face
 
     def set_face_normal(self, r: RayList, outward_normal: np.ndarray) \
             -> HitRecordList:
         self.front_face = (r.direction() * outward_normal).sum(axis=1) < 0
-        self.normal = np.transpose(
-            ((self.front_face + 1) * 2 - 3) * np.transpose(outward_normal)
-        )
+        front_face_3 = np.transpose(np.tile(self.front_face, (3, 1)))
+        self.normal = np.where(front_face_3, outward_normal, -outward_normal)
         return self
 
-    def __getitem__(self, idx: int) -> HitRecord:
-        return HitRecord(
-            Point3(*self.p[idx]), self.t[idx], self.material[idx],
-            Vec3(*self.normal[idx]), self.front_face[idx]
-        )
+    def __getitem__(self, idx: int) -> Optional[HitRecord]:
+        mat = self.material[idx]
+        if mat is None or self.t[idx] <= 0:
+            return None
+        else:
+            return HitRecord(
+                Point3(*self.p[idx]), self.t[idx], mat,
+                Vec3(*self.normal[idx]), self.front_face[idx]
+            )
 
     def __len__(self) -> int:
         return len(self.t)
@@ -55,30 +60,22 @@ class HitRecordList:
         self.idx = 0
         return self
 
-    def __next__(self) -> HitRecord:
+    def __next__(self) -> Optional[HitRecord]:
         if self.idx >= len(self):
             raise StopIteration
         result = self[self.idx]
         self.idx += 1
         return result
 
-    def update(self, new: HitRecordList, max_list: np.ndarray) \
+    def update(self, new: HitRecordList) \
             -> HitRecordList:
-        change = self.t < max_list
+        change = (new.t < self.t) & (new.t >= 0)
         change_3 = np.transpose(np.tile(change, (3, 1)))
-        # self.p = np.where(change_3, new.p, self.p)
-        # self.t = np.where(change, new.t, self.t)
-        # self.material = np.where(change, new.material, self.material)
-        for i, c in enumerate(change):
-            if c:
-                self.material[i] = new.material[i]
-        # self.normal = np.where(change_3, new.normal, self.normal)
-        # self.front_face = np.where(change, new.front_face, self.front_face)
-        self.p = new.p * change_3 + self.p * ~change_3
-        self.t = new.t * change + self.t * ~change
-        # self.material = new.material * change + self.material * ~change
-        self.normal = new.normal * change_3 + self.normal * ~change_3
-        self.front_face = new.front_face * change + self.front_face * ~change
+        self.p = np.where(change_3, new.p, self.p)
+        self.t = np.where(change, new.t, self.t)
+        self.material = np.where(change, new.material, self.material)
+        self.normal = np.where(change_3, new.normal, self.normal)
+        self.front_face = np.where(change, new.front_face, self.front_face)
         return self
 
 
