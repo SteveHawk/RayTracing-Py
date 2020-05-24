@@ -5,15 +5,15 @@ from utils.hittable import Hittable, HitRecordList
 
 
 class HittableList(Hittable):
-    def __init__(self, obj: Optional[Hittable] = None):
+    def __init__(self, obj: Optional[Hittable] = None) -> None:
         self.objects: List[Hittable] = list()
         if obj is not None:
             self.add(obj)
 
-    def add(self, obj: Hittable):
+    def add(self, obj: Hittable) -> None:
         self.objects.append(obj)
 
-    def clear(self):
+    def clear(self) -> None:
         self.objects.clear()
 
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
@@ -30,7 +30,7 @@ class HittableList(Hittable):
             np.empty((len(r), 3), dtype=np.float32),
             np.empty(len(r), dtype=np.bool)
         )
-        for i, obj in enumerate(self.objects):
+        for obj in self.objects:
             temp_rec_list: HitRecordList = obj.hit(r, t_min, closest_so_far)
             rec.update(temp_rec_list)
             closest_so_far = rec.t

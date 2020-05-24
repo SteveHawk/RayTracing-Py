@@ -30,8 +30,14 @@ class Sphere(Hittable):
         t_0 = (-half_b - root) / a
         t_1 = (-half_b + root) / a
 
-        t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
-        t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
+        discriminant_condition = discriminant_list > 0
+        t_0_condition = (
+            (t_min < t_0) & (t_0 < t_max_list) & discriminant_condition
+        )
+        t_1_condition = (
+            (t_min < t_1) & (t_1 < t_max_list)
+            & (~t_0_condition) & discriminant_condition
+        )
         t = np.where(t_0_condition, t_0, -1)
         t = np.where(t_1_condition, t_1, t)
 

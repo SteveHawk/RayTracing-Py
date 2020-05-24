@@ -45,7 +45,7 @@ class HitRecordList:
 
     def __getitem__(self, idx: int) -> Optional[HitRecord]:
         mat = self.material[idx]
-        if mat is None or self.t[idx] <= 0:
+        if mat is None or np.isinf(self.t[idx]):
             return None
         else:
             return HitRecord(
@@ -67,9 +67,8 @@ class HitRecordList:
         self.idx += 1
         return result
 
-    def update(self, new: HitRecordList) \
-            -> HitRecordList:
-        change = (new.t < self.t) & (new.t >= 0)
+    def update(self, new: HitRecordList) -> HitRecordList:
+        change = (new.t < self.t) & (new.t > 0)
         change_3 = np.transpose(np.tile(change, (3, 1)))
         self.p = np.where(change_3, new.p, self.p)
         self.t = np.where(change, new.t, self.t)
