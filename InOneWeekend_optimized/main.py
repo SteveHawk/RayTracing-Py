@@ -146,7 +146,7 @@ def main() -> None:
     start_time = time.time()
 
     n_processer = multiprocessing.cpu_count()
-    img_list: List[Img] = Parallel(n_jobs=n_processer)(
+    img_list: List[Img] = Parallel(n_jobs=4)(
         delayed(scan_line)(
             j, world, cam,
             image_width, image_height,

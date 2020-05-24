@@ -49,7 +49,7 @@ class HitRecordList:
         )
 
     def __len__(self) -> int:
-        return len(self.p)
+        return len(self.t)
 
     def __iter__(self) -> HitRecordList:
         self.idx = 0
@@ -66,11 +66,19 @@ class HitRecordList:
             -> HitRecordList:
         change = self.t < max_list
         change_3 = np.transpose(np.tile(change, (3, 1)))
-        self.p = np.where(change_3, new.p, self.p)
-        self.t = np.where(change, new.t, self.t)
-        self.material = np.where(change, new.material, self.material)
-        self.normal = np.where(change_3, new.normal, self.normal)
-        self.front_face = np.where(change, new.front_face, self.front_face)
+        # self.p = np.where(change_3, new.p, self.p)
+        # self.t = np.where(change, new.t, self.t)
+        # self.material = np.where(change, new.material, self.material)
+        for i, c in enumerate(change):
+            if c:
+                self.material[i] = new.material[i]
+        # self.normal = np.where(change_3, new.normal, self.normal)
+        # self.front_face = np.where(change, new.front_face, self.front_face)
+        self.p = new.p * change_3 + self.p * ~change_3
+        self.t = new.t * change + self.t * ~change
+        # self.material = new.material * change + self.material * ~change
+        self.normal = new.normal * change_3 + self.normal * ~change_3
+        self.front_face = new.front_face * change + self.front_face * ~change
         return self
 
 

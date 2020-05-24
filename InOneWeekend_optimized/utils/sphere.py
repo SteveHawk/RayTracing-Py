@@ -32,7 +32,7 @@ class Sphere(Hittable):
 
         t_0_condition = (t_min < t_0) & (t_0 < t_max_list)
         t_1_condition = (t_min < t_1) & (t_1 < t_max_list) & (~t_0_condition)
-        t = np.where(t_0_condition, t_0, t_max_list)
+        t = np.where(t_0_condition, t_0, np.nan)
         t = np.where(t_1_condition, t_1, t)
 
         point = r.at(t)
