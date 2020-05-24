@@ -26,7 +26,7 @@ class HittableList(Hittable):
         rec = HitRecordList(
             np.empty((len(r), 3), dtype=np.float32),
             closest_so_far,
-            [None for i in range(len(r))],
+            [None] * len(r),
             np.empty((len(r), 3), dtype=np.float32),
             np.empty(len(r), dtype=np.bool)
         )

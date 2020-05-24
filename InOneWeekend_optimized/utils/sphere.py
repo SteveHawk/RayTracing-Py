@@ -30,7 +30,7 @@ class Sphere(Hittable):
             return HitRecordList(
                 np.empty((len(r), 3), dtype=np.float32),
                 np.zeros(len(r)),
-                [None for i in range(len(r))],
+                [None] * len(r),
                 np.empty((len(r), 3), dtype=np.float32),
                 np.empty(len(r), dtype=np.bool)
             )
