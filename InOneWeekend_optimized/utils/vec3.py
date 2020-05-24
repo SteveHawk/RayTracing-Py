@@ -6,10 +6,7 @@ from utils.rtweekend import random_float, random_float_list
 
 class Vec3:
     def __init__(self, e0: float = 0, e1: float = 0, e2: float = 0) -> None:
-        try:
-            self.e: np.ndarray = np.array([e0, e1, e2], dtype=np.float32)
-        except:
-            print(e0, e1, e2)
+        self.e: np.ndarray = np.array([e0, e1, e2], dtype=np.float32)
 
     def x(self) -> float:
         return self.e[0]
@@ -75,7 +72,10 @@ class Vec3:
         return Vec3(*np.cross(self.e, v.e))
 
     def unit_vector(self) -> Vec3:
-        return (self / self.length())
+        length = self.length()
+        if length == 0:
+            return Vec3()
+        return (self / length)
 
     def clamp(self, _min: float, _max: float) -> Vec3:
         return Vec3(*np.clip(self.e, _min, _max))

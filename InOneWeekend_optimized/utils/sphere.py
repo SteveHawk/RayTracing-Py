@@ -39,8 +39,9 @@ class Sphere(Hittable):
             discriminant_list * discriminant_condition
         )
         root = np.sqrt(positive_discriminant_list)
-        t_0 = (-half_b - root) / a
-        t_1 = (-half_b + root) / a
+        non_zero_a = a - (a == 0)
+        t_0 = (-half_b - root) / non_zero_a
+        t_1 = (-half_b + root) / non_zero_a
 
         t_0_condition = (
             (t_min < t_0) & (t_0 < t_max_list) & discriminant_condition

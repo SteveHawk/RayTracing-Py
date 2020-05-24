@@ -5,7 +5,7 @@ from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
-from utils.ray import RayList
+from utils.ray import RayList, Ray
 from utils.sphere import Sphere
 from utils.hittable import Hittable, HitRecordList
 from utils.hittable_list import HittableList
@@ -15,28 +15,35 @@ from utils.material import Lambertian, Metal, Dielectric
 
 
 def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
-    if depth <= 0:
-        return np.zeros((len(r), 3))
-    result = np.empty((len(r), 3), dtype=np.float32)
+    if depth <= 0 or not r.direction().any():
+        return np.zeros((len(r), 3), dtype=np.float32)
+
+    scattered_list = RayList(
+        np.zeros((len(r), 3), dtype=np.float32),
+        np.zeros((len(r), 3), dtype=np.float32)
+    )
+    attenuation_list = np.zeros((len(r), 3), dtype=np.float32)
+    result_bg = np.zeros((len(r), 3), dtype=np.float32)
 
     rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
     for i, rec in enumerate(rec_list):
         if rec is not None:
-            scatter_result = rec.material.scatter(r[i], rec)
-            if scatter_result is not None:
-                scattered, attenuation = scatter_result
-                result[i] = (
-                    attenuation.e
-                    * ray_color(RayList.single(scattered), world, depth-1)[0]
-                )
-            else:
-                result[i] = Color(0, 0, 0).e
+            scattered, attenuation = rec.material.scatter(r[i], rec)
+            scattered_list[i] = scattered
+            attenuation_list[i] = attenuation.e
         else:
             unit_direction: Vec3 = r[i].direction().unit_vector()
+            if unit_direction.length() == 0:
+                continue
             t = (unit_direction.y() + 1) * 0.5
-            result[i] = (Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t).e
+            result_bg[i] = (
+                (Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t).e
+            )
+    result_hittable = (
+        attenuation_list * ray_color(scattered_list, world, depth-1)
+    )
 
-    return result
+    return result_hittable + result_bg
 
 
 def three_ball_scene() -> HittableList:

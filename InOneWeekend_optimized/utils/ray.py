@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np  # type: ignore
+from typing import Tuple
 from utils.vec3 import Vec3, Point3
 
 
@@ -36,6 +37,10 @@ class RayList:
 
     def __getitem__(self, idx: int) -> Ray:
         return Ray(Point3(*self.orig[idx]), Vec3(*self.dir[idx]))
+
+    def __setitem__(self, idx: int, r: Ray) -> None:
+        self.orig[idx] = r.orig.e
+        self.dir[idx] = r.dir.e
 
     def at(self, t: np.ndarray) -> np.ndarray:
         # t's shape: n * 1
