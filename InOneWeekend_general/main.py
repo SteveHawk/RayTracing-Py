@@ -65,12 +65,12 @@ def random_scene() -> HittableList:
             )
 
             if (center - Vec3(4, 0.2, 0)).length() > 0.9:
-                if choose_mat < 0.3:
+                if choose_mat < 0.6:
                     # Diffuse
                     albedo = Color.random() * Color.random()
                     sphere_material_diffuse = Lambertian(albedo)
                     world.add(Sphere(center, 0.2, sphere_material_diffuse))
-                elif choose_mat < 0.7:
+                elif choose_mat < 0.8:
                     # Metal
                     albedo = Color.random(0.5, 1)
                     fuzz = random_float(0, 0.5)
