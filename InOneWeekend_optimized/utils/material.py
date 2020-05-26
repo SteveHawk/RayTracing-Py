@@ -18,6 +18,8 @@ class Lambertian(Material):
         self.albedo = a
 
     def scatter(self, r_in: Ray, rec: HitRecord) -> Tuple[Ray, Color]:
+        if not rec.front_face:
+            return Ray(), Color()
         scatter_direction: Vec3 = rec.normal + Vec3.random_unit_vector()
         scattered = Ray(rec.p, scatter_direction)
         attenuation = self.albedo
@@ -29,6 +31,8 @@ class Hemisphere(Material):
         self.albedo = a
 
     def scatter(self, r_in: Ray, rec: HitRecord) -> Tuple[Ray, Color]:
+        if not rec.front_face:
+            return Ray(), Color()
         scatter_direction: Vec3 = Vec3.random_in_hemisphere(rec.normal)
         scattered = Ray(rec.p, scatter_direction)
         attenuation = self.albedo
@@ -41,6 +45,8 @@ class Metal(Material):
         self.fuzz = f if f < 1 else 1
 
     def scatter(self, r_in: Ray, rec: HitRecord) -> Tuple[Ray, Color]:
+        if not rec.front_face:
+            return Ray(), Color()
         reflected: Vec3 = r_in.direction().unit_vector().reflect(rec.normal) \
             + Vec3.random_in_unit_sphere() * self.fuzz
         scattered = Ray(rec.p, reflected)

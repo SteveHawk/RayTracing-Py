@@ -89,8 +89,6 @@ class Vec3:
     def refract(self, normal: Vec3, etai_over_etat: float) -> Vec3:
         cos_theta: float = -self @ normal
         r_out_parallel: Vec3 = (self + normal*cos_theta) * etai_over_etat
-        if r_out_parallel.length_squared() >= 1:
-            print(self, normal, etai_over_etat, cos_theta, r_out_parallel)
         r_out_prep: Vec3 = \
             normal * (-np.sqrt(1 - r_out_parallel.length_squared()))
         return r_out_parallel + r_out_prep
