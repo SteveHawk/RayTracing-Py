@@ -76,7 +76,8 @@ class Metal(Material):
             ) * 2
         )
         reflected = (
-            reflect_ray + Vec3.random_in_unit_sphere_list(len(r_in)) * self.fuzz
+            reflect_ray
+            + Vec3.random_in_unit_sphere_list(len(r_in)) * self.fuzz
         )
 
         condition = condition & ((reflected * rec.normal).sum(axis=1) > 0)
@@ -133,9 +134,15 @@ class Dielectric(Material):
         refracted = r_out_parallel + r_out_prep
 
         direction = np.where(condition, reflected, refracted)
-        scattered = RayList(rec.p, direction)
 
-        attenuation = np.tile(Color(1, 1, 1).e, (len(r_in), 1))
+        condition_0 = rec.t > 0
+        scattered = RayList(
+            np.transpose(np.transpose(rec.p) * condition_0),
+            np.transpose(np.transpose(direction) * condition_0)
+        )
+        attenuation = (
+            Color(1, 1, 1).e * np.transpose(np.tile(condition_0, (3, 1)))
+        )
         return scattered, attenuation
 
     @staticmethod
