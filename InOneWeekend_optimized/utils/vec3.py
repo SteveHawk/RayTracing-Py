@@ -118,19 +118,34 @@ class Vec3:
         return Vec3(x, y, z)
 
     @staticmethod
-    def random_unit_vector() -> Vec3:
-        a: float = random_float(0, 2 * np.pi)
-        z: float = random_float(-1, 1)
-        r: float = np.sqrt(1 - z**2)
-        return Vec3(r*np.cos(a), r*np.sin(a), z)
+    def random_in_unit_sphere_list(size: int) -> np.ndarray:
+        u = random_float_list(size)
+        v = random_float_list(size)
+        theta = u * 2 * np.pi
+        phi = np.arccos(2 * v - 1)
+        r = np.cbrt(random_float_list(size))
+        sinTheta = np.sin(theta)
+        cosTheta = np.cos(theta)
+        sinPhi = np.sin(phi)
+        cosPhi = np.cos(phi)
+        x = r * sinPhi * cosTheta
+        y = r * sinPhi * sinTheta
+        z = r * cosPhi
+        return np.stack([x, y, z], axis=-1)
 
     @staticmethod
-    def random_in_hemisphere(normal: Vec3) -> Vec3:
-        in_unit_sphere: Vec3 = Vec3.random_in_unit_sphere()
-        if in_unit_sphere @ normal > 0:
-            return in_unit_sphere
-        else:
-            return -in_unit_sphere
+    def random_unit_vector(size: int) -> np.ndarray:
+        a = random_float_list(size, 0, 2 * np.pi)
+        z = random_float_list(size, -1, 1)
+        r = np.sqrt(1 - z**2)
+        return np.stack([a, z, r], axis=-1)
+
+    @staticmethod
+    def random_in_hemisphere(normal: np.ndarray) -> np.ndarray:
+        in_unit_sphere = Vec3.random_in_unit_sphere_list(len(normal))
+        return np.where(
+            in_unit_sphere @ normal > 0, in_unit_sphere, -in_unit_sphere
+        )
 
     @staticmethod
     def random_in_unit_disk(size: int) -> np.ndarray:

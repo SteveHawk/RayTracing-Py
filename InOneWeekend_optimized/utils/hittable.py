@@ -1,5 +1,5 @@
 from __future__ import annotations
-import numpy as np
+import numpy as np  # type: ignore
 from abc import ABC, abstractmethod
 from typing import Optional, List, Union
 from utils.vec3 import Vec3, Point3
@@ -53,6 +53,13 @@ class HitRecordList:
                 Vec3(*self.normal[idx]), self.front_face[idx]
             )
 
+    def __setitem__(self, idx: int, rec: HitRecord) -> None:
+        self.p[idx] = rec.p.e
+        self.t[idx] = rec.t
+        self.material[idx] = rec.material
+        self.normal[idx] = rec.normal.e
+        self.front_face[idx] = rec.front_face
+
     def __len__(self) -> int:
         return len(self.t)
 
@@ -76,6 +83,16 @@ class HitRecordList:
         self.normal = np.where(change_3, new.normal, self.normal)
         self.front_face = np.where(change, new.front_face, self.front_face)
         return self
+
+    @staticmethod
+    def new(length: int) -> HitRecordList:
+        return HitRecordList(
+            np.empty((length, 3), dtype=np.float32),
+            np.zeros(length, dtype=np.float32),
+            [None] * length,
+            np.empty((length, 3), dtype=np.float32),
+            np.empty(length, dtype=np.bool)
+        )
 
 
 class Hittable(ABC):

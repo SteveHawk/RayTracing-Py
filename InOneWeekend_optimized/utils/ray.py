@@ -42,6 +42,12 @@ class RayList:
         self.orig[idx] = r.orig.e
         self.dir[idx] = r.dir.e
 
+    def __add__(self, r: RayList) -> RayList:
+        return RayList(
+            self.orig + r.orig,
+            self.dir + r.dir
+        )
+
     def at(self, t: np.ndarray) -> np.ndarray:
         # t's shape: n * 1
         return self.orig + np.transpose(np.transpose(self.dir) * t)
@@ -49,3 +55,8 @@ class RayList:
     @staticmethod
     def single(r: Ray) -> RayList:
         return RayList(np.array([r.orig.e]), np.array([r.dir.e]))
+
+    @staticmethod
+    def new(length: int) -> RayList:
+        return RayList(np.empty((length, 3), dtype=np.float32),
+                       np.empty((length, 3), dtype=np.float32))

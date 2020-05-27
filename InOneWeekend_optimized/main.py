@@ -2,35 +2,37 @@ import numpy as np  # type: ignore
 import multiprocessing
 import time
 from joblib import Parallel, delayed  # type: ignore
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import RayList, Ray
 from utils.sphere import Sphere
-from utils.hittable import Hittable, HitRecordList
+from utils.hittable import Hittable, HitRecordList, HitRecord
 from utils.hittable_list import HittableList
 from utils.rtweekend import random_float, random_float_list
 from utils.camera import Camera
-from utils.material import Lambertian, Metal, Dielectric
+from utils.material import Material, Lambertian, Metal, Dielectric
 
 
 def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
+    length = len(r)
     if depth <= 0 or not r.direction().any():
-        return np.zeros((len(r), 3), dtype=np.float32)
+        return np.zeros((length, 3), dtype=np.float32)
 
-    scattered_list = RayList(
-        np.zeros((len(r), 3), dtype=np.float32),
-        np.zeros((len(r), 3), dtype=np.float32)
-    )
-    attenuation_list = np.zeros((len(r), 3), dtype=np.float32)
-    result_bg = np.zeros((len(r), 3), dtype=np.float32)
+    result_bg = np.zeros((length, 3), dtype=np.float32)
+    material_dict: Dict[int, Material] = dict()
+    arg_dict: Dict[int, Tuple[RayList, HitRecordList]] = dict()
 
     rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
+    rec: Optional[HitRecord]
     for i, rec in enumerate(rec_list):
         if rec is not None:
-            scattered, attenuation = rec.material.scatter(r[i], rec)
-            scattered_list[i] = scattered
-            attenuation_list[i] = attenuation.e
+            idx = rec.material.idx
+            if idx not in material_dict:
+                material_dict[idx] = rec.material
+                arg_dict[idx] = RayList.new(length), HitRecordList.new(length)
+            arg_dict[idx][0][i] = r[i]
+            arg_dict[idx][1][i] = rec
         else:
             unit_direction: Vec3 = r[i].direction().unit_vector()
             if unit_direction.length() == 0:
@@ -39,6 +41,20 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
             result_bg[i] = (
                 (Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t).e
             )
+
+    scattered_list = RayList(
+        np.zeros((length, 3), dtype=np.float32),
+        np.zeros((length, 3), dtype=np.float32)
+    )
+    attenuation_list = np.zeros((length, 3), dtype=np.float32)
+
+    for key in material_dict:
+        material = material_dict[key]
+        r, h = arg_dict[key]
+        scattered, attenuation = material.scatter(r, h)
+        scattered_list += scattered
+        attenuation_list += attenuation
+
     result_hittable = (
         attenuation_list * ray_color(scattered_list, world, depth-1)
     )
@@ -49,19 +65,20 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
 def three_ball_scene() -> HittableList:
     world = HittableList()
     world.add(Sphere(
-        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5))
+        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5), 0)
     ))
     world.add(Sphere(
-        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0))
+        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0), 1)
     ))
     world.add(Sphere(
-        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3)
+        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3, 2)
+    ))
+    material_dielectric = Dielectric(1.5, 3)
+    world.add(Sphere(
+        Point3(-1, 0, -1), 0.5, material_dielectric
     ))
     world.add(Sphere(
-        Point3(-1, 0, -1), 0.5, Dielectric(1.5)
-    ))
-    world.add(Sphere(
-        Point3(-1, 0, -1), -0.45, Dielectric(1.5)
+        Point3(-1, 0, -1), -0.45, material_dielectric
     ))
     return world
 
@@ -69,9 +86,10 @@ def three_ball_scene() -> HittableList:
 def random_scene() -> HittableList:
     world = HittableList()
 
-    ground_material = Lambertian(Color(0.5, 0.5, 0.5))
+    ground_material = Lambertian(Color(0.5, 0.5, 0.5), 0)
     world.add(Sphere(Point3(0, -1000, 0), 1000, ground_material))
 
+    sphere_material_glass = Dielectric(1.5, 1)
     for a in range(-11, 11):
         for b in range(-11, 11):
             choose_mat = random_float()
@@ -80,29 +98,29 @@ def random_scene() -> HittableList:
             )
 
             if (center - Vec3(4, 0.2, 0)).length() > 0.9:
+                idx = (a*22 + b) + (11*22 + 11) + 5
                 if choose_mat < 0.6:
                     # Diffuse
                     albedo = Color.random() * Color.random()
-                    sphere_material_diffuse = Lambertian(albedo)
+                    sphere_material_diffuse = Lambertian(albedo, idx)
                     world.add(Sphere(center, 0.2, sphere_material_diffuse))
                 elif choose_mat < 0.8:
                     # Metal
                     albedo = Color.random(0.5, 1)
                     fuzz = random_float(0, 0.5)
-                    sphere_material_metal = Metal(albedo, fuzz)
+                    sphere_material_metal = Metal(albedo, fuzz, idx)
                     world.add(Sphere(center, 0.2, sphere_material_metal))
                 else:
                     # Glass
-                    sphere_material_glass = Dielectric(1.5)
                     world.add(Sphere(center, 0.2, sphere_material_glass))
 
-    material_1 = Dielectric(1.5)
+    material_1 = Dielectric(1.5, 2)
     world.add(Sphere(Point3(0, 1, 0), 1, material_1))
 
-    material_2 = Lambertian(Color(0.4, 0.2, 0.1))
+    material_2 = Lambertian(Color(0.4, 0.2, 0.1), 3)
     world.add(Sphere(Point3(-4, 1, 0), 1, material_2))
 
-    material_3 = Metal(Color(0.7, 0.6, 0.5), 0)
+    material_3 = Metal(Color(0.7, 0.6, 0.5), 0, 4)
     world.add(Sphere(Point3(4, 1, 0), 1, material_3))
 
     return world

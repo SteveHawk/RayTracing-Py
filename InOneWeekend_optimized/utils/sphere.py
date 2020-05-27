@@ -27,13 +27,7 @@ class Sphere(Hittable):
 
         discriminant_condition = discriminant_list > 0
         if not discriminant_condition.any():
-            return HitRecordList(
-                np.empty((len(r), 3), dtype=np.float32),
-                np.zeros(len(r)),
-                [None] * len(r),
-                np.empty((len(r), 3), dtype=np.float32),
-                np.empty(len(r), dtype=np.bool)
-            )
+            return HitRecordList.new(len(r))
 
         positive_discriminant_list = (
             discriminant_list * discriminant_condition
