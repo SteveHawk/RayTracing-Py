@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Optional
 import numpy as np  # type: ignore
 from utils.ray import RayList
-from utils.vec3 import Vec3, Color
+from utils.vec3 import Vec3, Color, Vec3List
 from utils.hittable import HitRecordList
 from utils.rtweekend import random_float_list
 
@@ -14,7 +14,7 @@ class Material(ABC):
 
     @abstractmethod
     def scatter(self, r_in: RayList, rec: HitRecordList) \
-            -> Tuple[RayList, np.ndarray]:
+            -> Tuple[RayList, Vec3List]:
         return NotImplemented
 
 
@@ -24,15 +24,15 @@ class Lambertian(Material):
         self.idx = idx
 
     def scatter(self, r_in: RayList, rec: HitRecordList) \
-            -> Tuple[RayList, np.ndarray]:
+            -> Tuple[RayList, Vec3List]:
         condition = (rec.t > 0) & rec.front_face
 
         scatter_direction = rec.normal + Vec3.random_unit_vector(len(r_in))
         scattered = RayList(
-            np.transpose(np.transpose(rec.p) * condition),
-            np.transpose(np.transpose(scatter_direction) * condition)
+            rec.p.mul_ndarray(condition),
+            scatter_direction.mul_ndarray(condition)
         )
-        attenuation = self.albedo.e * np.transpose(np.tile(condition, (3, 1)))
+        attenuation = Vec3List.from_array(condition) * self.albedo
 
         return scattered, attenuation
 
@@ -43,15 +43,15 @@ class Hemisphere(Material):
         self.idx = idx
 
     def scatter(self, r_in: RayList, rec: HitRecordList) \
-            -> Tuple[RayList, np.ndarray]:
+            -> Tuple[RayList, Vec3List]:
         condition = (rec.t > 0) & rec.front_face
 
         scatter_direction = Vec3.random_in_hemisphere(rec.normal)
         scattered = RayList(
-            np.transpose(np.transpose(rec.p) * condition),
-            np.transpose(np.transpose(scatter_direction) * condition)
+            rec.p.mul_ndarray(condition),
+            scatter_direction.mul_ndarray(condition)
         )
-        attenuation = self.albedo.e * np.transpose(np.tile(condition, (3, 1)))
+        attenuation = Vec3List.from_array(condition) * self.albedo
 
         return scattered, attenuation
 
@@ -63,29 +63,20 @@ class Metal(Material):
         self.idx = idx
 
     def scatter(self, r_in: RayList, rec: HitRecordList) \
-            -> Tuple[RayList, np.ndarray]:
+            -> Tuple[RayList, Vec3List]:
         condition = (rec.t > 0) & rec.front_face
 
-        r_in_dir = r_in.direction()
-        unit_dir = np.transpose(
-            np.transpose(r_in_dir) / np.sqrt((r_in_dir ** 2).sum(axis=1))
-        )
-        reflect_ray = (
-            unit_dir - np.transpose(
-                np.transpose(rec.normal) * (unit_dir * rec.normal).sum(axis=1)
-            ) * 2
-        )
         reflected = (
-            reflect_ray
+            r_in.direction().unit_vector().reflect(rec.normal)
             + Vec3.random_in_unit_sphere_list(len(r_in)) * self.fuzz
         )
 
-        condition = condition & ((reflected * rec.normal).sum(axis=1) > 0)
+        condition = condition & (reflected @ rec.normal > 0)
         scattered = RayList(
-            np.transpose(np.transpose(rec.p) * condition),
-            np.transpose(np.transpose(reflected) * condition)
+            rec.p.mul_ndarray(condition),
+            reflected.mul_ndarray(condition)
         )
-        attenuation = self.albedo.e * np.transpose(np.tile(condition, (3, 1)))
+        attenuation = Vec3List.from_array(condition) * self.albedo
 
         return scattered, attenuation
 
@@ -96,53 +87,34 @@ class Dielectric(Material):
         self.idx = idx
 
     def scatter(self, r_in: RayList, rec: HitRecordList) \
-            -> Tuple[RayList, np.ndarray]:
+            -> Tuple[RayList, Vec3List]:
         etai_over_etat = np.where(
             rec.front_face, 1 / self.ref_idx, self.ref_idx
         )
 
-        r_in_dir = r_in.direction()
-        unit_direction = np.transpose(
-            np.transpose(r_in_dir) / np.sqrt((r_in_dir ** 2).sum(axis=1))
-        )
-        cos_theta = (-unit_direction * rec.normal).sum(axis=1)
+        unit_direction = r_in.direction().unit_vector()
+        cos_theta = -unit_direction @ rec.normal
         cos_theta = np.where(cos_theta > 1, 1, cos_theta)
         sin_theta = np.sqrt(1 - cos_theta**2)
-        reflect_prob: float = self.schlick(cos_theta, etai_over_etat)
+        reflect_prob = self.schlick(cos_theta, etai_over_etat)
 
-        condition = np.transpose(np.tile(
-            (etai_over_etat * sin_theta > 1)
-            | (random_float_list(len(r_in)) < reflect_prob),
-            (3, 1)
-        ))
         # total internal reflection
-        reflected = (
-            unit_direction - np.transpose(
-                np.transpose(rec.normal)
-                * (unit_direction * rec.normal).sum(axis=1)
-            ) * 2
-        )
+        reflected = unit_direction.reflect(rec.normal)
         # refraction
-        r_out_parallel = np.transpose(np.transpose(
-            unit_direction
-            + np.transpose(np.transpose(rec.normal) * cos_theta)
-        ) * etai_over_etat)
-        r_out_parallel_length2 = (r_out_parallel ** 2).sum(axis=1)
-        r_out_prep = np.transpose(
-            np.transpose(rec.normal) * (-np.sqrt(1 - r_out_parallel_length2))
-        )
-        refracted = r_out_parallel + r_out_prep
+        refracted = unit_direction.refract(rec.normal, etai_over_etat)
 
-        direction = np.where(condition, reflected, refracted)
+        condition = Vec3List.from_array(
+            (etai_over_etat * sin_theta > 1)
+            | (random_float_list(len(r_in)) < reflect_prob)
+        )
+        direction = Vec3List(np.where(condition.e, reflected.e, refracted.e))
 
         condition_0 = rec.t > 0
         scattered = RayList(
-            np.transpose(np.transpose(rec.p) * condition_0),
-            np.transpose(np.transpose(direction) * condition_0)
+            rec.p.mul_ndarray(condition_0),
+            direction.mul_ndarray(condition_0)
         )
-        attenuation = (
-            Color(1, 1, 1).e * np.transpose(np.tile(condition_0, (3, 1)))
-        )
+        attenuation = Vec3List.from_array(condition_0) * Color(1, 1, 1)
         return scattered, attenuation
 
     @staticmethod

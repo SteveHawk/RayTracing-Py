@@ -118,7 +118,7 @@ class Vec3:
         return Vec3(x, y, z)
 
     @staticmethod
-    def random_in_unit_sphere_list(size: int) -> np.ndarray:
+    def random_in_unit_sphere_list(size: int) -> Vec3List:
         u = random_float_list(size)
         v = random_float_list(size)
         theta = u * 2 * np.pi
@@ -131,21 +131,21 @@ class Vec3:
         x = r * sinPhi * cosTheta
         y = r * sinPhi * sinTheta
         z = r * cosPhi
-        return np.stack([x, y, z], axis=-1)
+        return Vec3List(np.stack([x, y, z], axis=-1))
 
     @staticmethod
-    def random_unit_vector(size: int) -> np.ndarray:
+    def random_unit_vector(size: int) -> Vec3List:
         a = random_float_list(size, 0, 2 * np.pi)
         z = random_float_list(size, -1, 1)
         r = np.sqrt(1 - z**2)
-        return np.stack([a, z, r], axis=-1)
+        return Vec3List(np.stack([a, z, r], axis=-1))
 
     @staticmethod
-    def random_in_hemisphere(normal: np.ndarray) -> np.ndarray:
+    def random_in_hemisphere(normal: Vec3List) -> Vec3List:
         in_unit_sphere = Vec3.random_in_unit_sphere_list(len(normal))
-        return np.where(
-            in_unit_sphere @ normal > 0, in_unit_sphere, -in_unit_sphere
-        )
+        return Vec3List(np.where(
+            in_unit_sphere @ normal > 0, in_unit_sphere.e, -in_unit_sphere.e
+        ))
 
     @staticmethod
     def random_in_unit_disk(size: int) -> np.ndarray:
@@ -157,3 +157,123 @@ class Vec3:
 # Type aliases for Vec3
 Point3 = Vec3  # 3D point
 Color = Vec3  # RGB color
+
+
+class Vec3List:
+    def __init__(self, e: np.ndarray):
+        self.e = e
+
+    def __getitem__(self, idx: int) -> Vec3:
+        return Vec3(*self.e[idx])
+
+    def get_ndarray(self, idx: int) -> np.ndarray:
+        return self.e[idx]
+
+    def __setitem__(self, idx: int, val: Vec3) -> None:
+        self.e[idx] = val.e
+
+    def __len__(self) -> int:
+        return len(self.e)
+
+    def __add__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
+        return Vec3List(self.e + v.e)
+
+    __radd__ = __add__
+
+    def __iadd__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
+        self.e += v.e
+        return self
+
+    def __mul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
+        if isinstance(v, (int, float, np.floating)):
+            return Vec3List(self.e * v)
+        return Vec3List(self.e * v.e)
+
+    __rmul__ = __mul__
+
+    def __imul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
+        if isinstance(v, (int, float, np.floating)):
+            self.e *= v
+        else:
+            self.e *= v.e
+        return self
+
+    def __sub__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
+        return Vec3List(self.e - v.e)
+
+    def __rsub__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
+        return Vec3List(v.e - self.e)
+
+    def __isub__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
+        self.e -= v.e
+        return self
+
+    def __neg__(self) -> Vec3List:
+        return Vec3List(-self.e)
+
+    def __truediv__(self, v: Union[Vec3List, float]) -> Vec3List:
+        if isinstance(v, Vec3List):
+            return Vec3List(self.e / v.e)
+        elif isinstance(v, (int, float, np.floating)):
+            return Vec3List(self.e / v)
+        return TypeError
+
+    def __matmul__(self, v: Vec3List) -> np.ndarray:
+        return (self.e * v.e).sum(axis=1)
+
+    def mul_ndarray(self, a: np.ndarray) -> Vec3List:
+        return Vec3List(
+            np.transpose(np.transpose(self.e) * a)
+        )
+
+    def div_ndarray(self, a: np.ndarray) -> Vec3List:
+        return Vec3List(
+            np.transpose(np.transpose(self.e) / a)
+        )
+
+    def length_squared(self) -> np.ndarray:
+        return (self.e ** 2).sum(axis=1)
+
+    def length(self) -> np.ndarray:
+        return np.sqrt(self.length_squared())
+
+    def unit_vector(self) -> Vec3List:
+        length = self.length()
+        condition = length > 0
+        length_non_zero = np.where(condition, length, 1)
+        return (self / length_non_zero) * condition
+
+    def reflect(self, n: Vec3List) -> Vec3List:
+        return self - (n * (self @ n)) * 2
+
+    def refract(self, normal: Vec3List, etai_over_etat: np.ndarray) \
+            -> Vec3List:
+        cos_theta = -self @ normal
+
+        r_out_parallel = (
+            self + normal.mul_ndarray(cos_theta)
+        ).mul_ndarray(etai_over_etat)
+
+        r_out_prep = normal.mul_ndarray(
+            -np.sqrt(1 - r_out_parallel.length_squared())
+        )
+
+        return r_out_parallel + r_out_prep
+
+    @staticmethod
+    def from_vec3(v: Vec3, length: int) -> Vec3List:
+        vl = np.tile(v.e, (length, 1))
+        return Vec3List(vl)
+
+    @staticmethod
+    def from_array(a: np.ndarray) -> Vec3List:
+        vl = np.transpose(np.tile(a, (3, 1)))
+        return Vec3List(vl)
+
+    @staticmethod
+    def new_empty(length: int) -> Vec3List:
+        return Vec3List(np.empty((length, 3), dtype=np.float32))
+
+    @staticmethod
+    def new_zero(length: int) -> Vec3List:
+        return Vec3List(np.zeros((length, 3), dtype=np.float32))

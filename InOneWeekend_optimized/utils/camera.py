@@ -1,6 +1,6 @@
 import numpy as np  # type: ignore
 from typing import List
-from utils.vec3 import Vec3, Point3
+from utils.vec3 import Vec3, Point3, Vec3List
 from utils.ray import RayList
 from utils.rtweekend import degrees_to_radians
 
@@ -35,22 +35,17 @@ class Camera:
             raise ValueError
         rd: np.ndarray = Vec3.random_in_unit_disk(len(s)) * self.lens_radius
 
-        u_multi = np.tile(self.u.e, (len(s), 1))
-        v_multi = np.tile(self.v.e, (len(s), 1))
-        offset_list = (
-            np.transpose(rd[0] * np.transpose(u_multi))
-            + np.transpose(rd[1] * np.transpose(v_multi))
-        )
+        u_multi = Vec3List.from_vec3(self.u, len(s))
+        v_multi = Vec3List.from_vec3(self.v, len(s))
+        offset_list = u_multi.mul_ndarray(rd[0]) + v_multi.mul_ndarray(rd[1])
 
-        origin_list = self.origin.e + offset_list
+        origin_list = offset_list + self.origin
 
-        horizontal_multi = np.tile(self.horizontal.e, (len(s), 1))
-        vertical_multi = np.tile(self.vertical.e, (len(s), 1))
+        horizontal_multi = Vec3List.from_vec3(self.horizontal, len(s))
+        vertical_multi = Vec3List.from_vec3(self.vertical, len(s))
         direction_list = (
-            self.lower_left_corner.e
-            + np.transpose(np.transpose(horizontal_multi) * s)
-            + np.transpose(np.transpose(vertical_multi) * t)
-            - self.origin.e - offset_list
+            horizontal_multi.mul_ndarray(s) + vertical_multi.mul_ndarray(t)
+            + self.lower_left_corner - self.origin - offset_list
         )
 
         return RayList(origin_list, direction_list)

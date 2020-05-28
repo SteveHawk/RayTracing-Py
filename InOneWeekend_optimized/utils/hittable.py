@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from abc import ABC, abstractmethod
 from typing import Optional, List, Union
-from utils.vec3 import Vec3, Point3
+from utils.vec3 import Vec3, Point3, Vec3List
 from utils.ray import Ray, RayList
 
 import typing
@@ -26,9 +26,9 @@ class HitRecord:
 
 
 class HitRecordList:
-    def __init__(self, point: np.ndarray, t: np.ndarray,
+    def __init__(self, point: Vec3List, t: np.ndarray,
                  mat: List[Optional[Material]],
-                 normal: np.ndarray = np.array([]),
+                 normal: Vec3List = Vec3List.new_empty(0),
                  front_face: np.ndarray = np.array([])) -> None:
         self.p = point
         self.t = t
@@ -36,11 +36,13 @@ class HitRecordList:
         self.normal = normal
         self.front_face = front_face
 
-    def set_face_normal(self, r: RayList, outward_normal: np.ndarray) \
+    def set_face_normal(self, r: RayList, outward_normal: Vec3List) \
             -> HitRecordList:
-        self.front_face = (r.direction() * outward_normal).sum(axis=1) < 0
-        front_face_3 = np.transpose(np.tile(self.front_face, (3, 1)))
-        self.normal = np.where(front_face_3, outward_normal, -outward_normal)
+        self.front_face = (r.direction() * outward_normal).e.sum(axis=1) < 0
+        front_face_3 = Vec3List.from_array(self.front_face)
+        self.normal = Vec3List(
+            np.where(front_face_3.e, outward_normal.e, -outward_normal.e)
+        )
         return self
 
     def __getitem__(self, idx: int) -> Optional[HitRecord]:
@@ -49,15 +51,15 @@ class HitRecordList:
             return None
         else:
             return HitRecord(
-                Point3(*self.p[idx]), self.t[idx], mat,
-                Vec3(*self.normal[idx]), self.front_face[idx]
+                self.p[idx], self.t[idx], mat,
+                self.normal[idx], self.front_face[idx]
             )
 
     def __setitem__(self, idx: int, rec: HitRecord) -> None:
-        self.p[idx] = rec.p.e
+        self.p[idx] = rec.p
         self.t[idx] = rec.t
         self.material[idx] = rec.material
-        self.normal[idx] = rec.normal.e
+        self.normal[idx] = rec.normal
         self.front_face[idx] = rec.front_face
 
     def __len__(self) -> int:
@@ -76,21 +78,34 @@ class HitRecordList:
 
     def update(self, new: HitRecordList) -> HitRecordList:
         change = (new.t < self.t) & (new.t > 0)
-        change_3 = np.transpose(np.tile(change, (3, 1)))
-        self.p = np.where(change_3, new.p, self.p)
+        change_3 = Vec3List.from_array(change)
+        self.p = Vec3List(np.where(change_3.e, new.p.e, self.p.e))
         self.t = np.where(change, new.t, self.t)
         self.material = np.where(change, new.material, self.material)
-        self.normal = np.where(change_3, new.normal, self.normal)
+        self.normal = Vec3List(
+            np.where(change_3.e, new.normal.e, self.normal.e)
+        )
         self.front_face = np.where(change, new.front_face, self.front_face)
         return self
 
     @staticmethod
     def new(length: int) -> HitRecordList:
         return HitRecordList(
-            np.empty((length, 3), dtype=np.float32),
+            Vec3List.new_empty(length),
             np.zeros(length, dtype=np.float32),
             [None] * length,
-            np.empty((length, 3), dtype=np.float32),
+            Vec3List.new_empty(length),
+            np.empty(length, dtype=np.bool)
+        )
+
+    @staticmethod
+    def empty_from_t(t: np.ndarray) -> HitRecordList:
+        length = len(t)
+        return HitRecordList(
+            Vec3List.new_empty(length),
+            t,
+            [None] * length,
+            Vec3List.new_empty(length),
             np.empty(length, dtype=np.bool)
         )
 

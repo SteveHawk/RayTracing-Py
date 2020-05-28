@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
 from typing import List
-from utils.vec3 import Color
+from utils.vec3 import Color, Vec3List
 
 
 class Img:
@@ -17,9 +17,9 @@ class Img:
         color: Color = pixel_color / samples_per_pixel
         self.frame[h][w] = color.clamp(0, 0.999).gamma(2).e
 
-    def write_pixel_list(self, h: int, pixel_color_list: np.ndarray,
+    def write_pixel_list(self, h: int, pixel_color_list: Vec3List,
                          samples_per_pixel: int) -> None:
-        color = pixel_color_list / samples_per_pixel
+        color = pixel_color_list.e / samples_per_pixel
         gamma: float = 2
         self.frame[h] = np.clip(color, 0, 0.999) ** (1 / gamma)
 

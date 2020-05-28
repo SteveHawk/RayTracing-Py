@@ -3,7 +3,7 @@ import multiprocessing
 import time
 from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional, Dict, Tuple
-from utils.vec3 import Vec3, Point3, Color
+from utils.vec3 import Vec3, Point3, Color, Vec3List
 from utils.img import Img
 from utils.ray import RayList, Ray
 from utils.sphere import Sphere
@@ -14,12 +14,12 @@ from utils.camera import Camera
 from utils.material import Material, Lambertian, Metal, Dielectric
 
 
-def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
+def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
     length = len(r)
-    if depth <= 0 or not r.direction().any():
-        return np.zeros((length, 3), dtype=np.float32)
+    if depth <= 0 or not r.direction().e.any():
+        return Vec3List.new_zero(length)
 
-    result_bg = np.zeros((length, 3), dtype=np.float32)
+    result_bg = Vec3List.new_zero(length)
     material_dict: Dict[int, Material] = dict()
     arg_dict: Dict[int, Tuple[RayList, HitRecordList]] = dict()
 
@@ -30,7 +30,9 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
             idx = rec.material.idx
             if idx not in material_dict:
                 material_dict[idx] = rec.material
-                arg_dict[idx] = RayList.new(length), HitRecordList.new(length)
+                arg_dict[idx] = (
+                    RayList.new_empty(length), HitRecordList.new(length)
+                )
             arg_dict[idx][0][i] = r[i]
             arg_dict[idx][1][i] = rec
         else:
@@ -38,15 +40,10 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> np.ndarray:
             if unit_direction.length() == 0:
                 continue
             t = (unit_direction.y() + 1) * 0.5
-            result_bg[i] = (
-                (Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t).e
-            )
+            result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
-    scattered_list = RayList(
-        np.zeros((length, 3), dtype=np.float32),
-        np.zeros((length, 3), dtype=np.float32)
-    )
-    attenuation_list = np.zeros((length, 3), dtype=np.float32)
+    scattered_list = RayList.new_zero(length)
+    attenuation_list = Vec3List.new_zero(length)
 
     for key in material_dict:
         material = material_dict[key]
@@ -130,10 +127,7 @@ def scan_line(j: int, world: HittableList, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
     img = Img(image_width, 1)
-    row_pixel_color = np.tile(
-        np.array([0, 0, 0], dtype=np.float32),
-        (image_width, 1)
-    )
+    row_pixel_color = Vec3List.from_vec3(Color(), image_width)
 
     for s in range(samples_per_pixel):
         u: np.ndarray = (random_float_list(image_width)

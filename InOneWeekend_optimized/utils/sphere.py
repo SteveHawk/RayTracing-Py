@@ -1,6 +1,6 @@
 import numpy as np  # type: ignore
 from typing import Optional, Union, List
-from utils.vec3 import Vec3, Point3
+from utils.vec3 import Vec3, Point3, Vec3List
 from utils.ray import RayList
 from utils.hittable import Hittable, HitRecordList
 from utils.material import Material
@@ -19,10 +19,10 @@ class Sphere(Hittable):
         else:
             t_max_list = t_max
 
-        oc: np.ndarray = r.origin() - self.center.e
-        a: np.ndarray = (r.direction()**2).sum(axis=1)
-        half_b: np.ndarray = (oc * r.direction()).sum(axis=1)
-        c: np.ndarray = (oc**2).sum(axis=1) - self.radius**2
+        oc: Vec3List = r.origin() - self.center
+        a: np.ndarray = r.direction().length_squared()
+        half_b: np.ndarray = oc @ r.direction()
+        c: np.ndarray = oc.length_squared() - self.radius**2
         discriminant_list: np.ndarray = half_b**2 - a*c
 
         discriminant_condition = discriminant_list > 0
@@ -48,7 +48,7 @@ class Sphere(Hittable):
         t = np.where(t_1_condition, t_1, t)
 
         point = r.at(t)
-        outward_normal = (point - self.center.e) / self.radius
+        outward_normal = (point - self.center) / self.radius
 
         result = HitRecordList(
             point, t, np.full(len(r), self.material)
