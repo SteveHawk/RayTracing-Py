@@ -31,7 +31,7 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
             if idx not in material_dict:
                 material_dict[idx] = rec.material
                 arg_dict[idx] = (
-                    RayList.new_empty(length), HitRecordList.new(length)
+                    RayList.new_zero(length), HitRecordList.new(length)
                 )
             arg_dict[idx][0][i] = r[i]
             arg_dict[idx][1][i] = rec

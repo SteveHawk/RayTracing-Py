@@ -23,7 +23,7 @@ class HittableList(Hittable):
         else:
             closest_so_far = t_max
 
-        rec = HitRecordList.empty_from_t(closest_so_far)
+        rec = HitRecordList.new_from_t(closest_so_far)
         for obj in self.objects:
             temp_rec_list: HitRecordList = obj.hit(r, t_min, closest_so_far)
             rec.update(temp_rec_list)

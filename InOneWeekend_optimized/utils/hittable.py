@@ -28,7 +28,7 @@ class HitRecord:
 class HitRecordList:
     def __init__(self, point: Vec3List, t: np.ndarray,
                  mat: List[Optional[Material]],
-                 normal: Vec3List = Vec3List.new_empty(0),
+                 normal: Vec3List = Vec3List.new_zero(0),
                  front_face: np.ndarray = np.array([])) -> None:
         self.p = point
         self.t = t
@@ -91,22 +91,22 @@ class HitRecordList:
     @staticmethod
     def new(length: int) -> HitRecordList:
         return HitRecordList(
-            Vec3List.new_empty(length),
+            Vec3List.new_zero(length),
             np.zeros(length, dtype=np.float32),
             [None] * length,
-            Vec3List.new_empty(length),
-            np.empty(length, dtype=np.bool)
+            Vec3List.new_zero(length),
+            np.zeros(length, dtype=np.bool)
         )
 
     @staticmethod
-    def empty_from_t(t: np.ndarray) -> HitRecordList:
+    def new_from_t(t: np.ndarray) -> HitRecordList:
         length = len(t)
         return HitRecordList(
-            Vec3List.new_empty(length),
+            Vec3List.new_zero(length),
             t,
             [None] * length,
-            Vec3List.new_empty(length),
-            np.empty(length, dtype=np.bool)
+            Vec3List.new_zero(length),
+            np.zeros(length, dtype=np.bool)
         )
 
 

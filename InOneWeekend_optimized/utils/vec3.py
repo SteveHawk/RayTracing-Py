@@ -61,7 +61,7 @@ class Vec3:
         elif isinstance(v, (int, float, np.floating)):
             self.e *= v
         else:
-            return TypeError
+            raise TypeError
         return self
 
     def __itruediv__(self, t: float) -> Vec3:
@@ -216,7 +216,7 @@ class Vec3List:
             return Vec3List(self.e / v.e)
         elif isinstance(v, (int, float, np.floating)):
             return Vec3List(self.e / v)
-        return TypeError
+        raise TypeError
 
     def __matmul__(self, v: Vec3List) -> np.ndarray:
         return (self.e * v.e).sum(axis=1)
@@ -241,10 +241,10 @@ class Vec3List:
         length = self.length()
         condition = length > 0
         length_non_zero = np.where(condition, length, 1)
-        return (self / length_non_zero) * condition
+        return self.div_ndarray(length_non_zero).mul_ndarray(condition)
 
     def reflect(self, n: Vec3List) -> Vec3List:
-        return self - (n * (self @ n)) * 2
+        return self - (n.mul_ndarray(self @ n)) * 2
 
     def refract(self, normal: Vec3List, etai_over_etat: np.ndarray) \
             -> Vec3List:
