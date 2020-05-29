@@ -131,14 +131,14 @@ class Vec3:
         x = r * sinPhi * cosTheta
         y = r * sinPhi * sinTheta
         z = r * cosPhi
-        return Vec3List(np.stack([x, y, z], axis=-1))
+        return Vec3List(np.transpose([x, y, z]))
 
     @staticmethod
     def random_unit_vector(size: int) -> Vec3List:
         a = random_float_list(size, 0, 2 * np.pi)
         z = random_float_list(size, -1, 1)
         r = np.sqrt(1 - z**2)
-        return Vec3List(np.stack([a, z, r], axis=-1))
+        return Vec3List(np.transpose([r*np.cos(a), r*np.sin(a), z]))
 
     @staticmethod
     def random_in_hemisphere(normal: Vec3List) -> Vec3List:

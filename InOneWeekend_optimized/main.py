@@ -46,8 +46,8 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
     scattered_list = RayList.new_zero(length)
     attenuation_list = Vec3List.new_zero(length)
     for key in material_dict:
-        material, r, h = material_dict[key]
-        scattered, attenuation = material.scatter(r, h)
+        material, ray, hitr = material_dict[key]
+        scattered, attenuation = material.scatter(ray, hitr)
         scattered_list += scattered
         attenuation_list += attenuation
     result_hittable = (
