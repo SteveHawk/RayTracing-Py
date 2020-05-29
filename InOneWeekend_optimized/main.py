@@ -14,49 +14,6 @@ from utils.camera import Camera
 from utils.material import Material, Lambertian, Metal, Dielectric
 
 
-def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
-    length = len(r)
-    if not r.direction().e.any():
-        return Vec3List.new_zero(length)
-
-    result_bg = Vec3List.new_zero(length)
-    material_dict: Dict[int, Tuple[Material, RayList, HitRecordList]] = dict()
-
-    rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
-    rec: Optional[HitRecord]
-    for i, rec in enumerate(rec_list):
-        if rec is not None:
-            idx = rec.material.idx
-            if idx not in material_dict:
-                material_dict[idx] = (
-                    rec.material, RayList.new_zero(length),
-                    HitRecordList.new(length)
-                )
-            material_dict[idx][1][i] = r[i]
-            material_dict[idx][2][i] = rec
-        else:
-            unit_direction: Vec3 = r[i].direction().unit_vector()
-            if unit_direction.length() == 0:
-                continue
-            t = (unit_direction.y() + 1) * 0.5
-            result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
-    if depth <= 1:
-        return result_bg
-
-    scattered_list = RayList.new_zero(length)
-    attenuation_list = Vec3List.new_zero(length)
-    for key in material_dict:
-        material, ray, hitr = material_dict[key]
-        scattered, attenuation = material.scatter(ray, hitr)
-        scattered_list += scattered
-        attenuation_list += attenuation
-    result_hittable = (
-        attenuation_list * ray_color(scattered_list, world, depth-1)
-    )
-
-    return result_hittable + result_bg
-
-
 def three_ball_scene() -> HittableList:
     world = HittableList()
     world.add(Sphere(
@@ -119,6 +76,91 @@ def random_scene() -> HittableList:
     world.add(Sphere(Point3(4, 1, 0), 1, material_3))
 
     return world
+
+
+def compress(r: RayList, rec: HitRecordList) \
+        -> Tuple[RayList, HitRecordList, Optional[np.ndarray]]:
+    full_rate = (rec.t > 0).sum()
+    if full_rate > 0.5:
+        return r, rec, None
+
+    idx: np.ndarray = np.where(rec.t > 0)[0]
+    new_r = RayList(
+        Vec3List(r.orig.get_ndarray(idx)), Vec3List(r.dir.get_ndarray(idx))
+    )
+    new_rec = HitRecordList(
+        Vec3List(rec.p.get_ndarray(idx)),
+        rec.t[idx],
+        rec.material[idx],
+        Vec3List(rec.normal.get_ndarray(idx)),
+        rec.front_face[idx]
+    )
+    return new_r, new_rec, idx
+
+
+def decompress(r: RayList, a: Vec3List, idx: Optional[np.ndarray],
+               length: int) -> Tuple[RayList, Vec3List]:
+    if idx is None:
+        return r, a
+
+    old_idx = np.arange(len(idx))
+
+    new_r = RayList.new_zero(length)
+    new_r.orig.e[idx] = r.orig.e[old_idx]
+    new_r.dir.e[idx] = r.dir.e[old_idx]
+
+    new_a = Vec3List.new_zero(length)
+    new_a.e[idx] = a.e[old_idx]
+
+    return new_r, new_a
+
+
+def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
+    length = len(r)
+    if not r.direction().e.any():
+        return Vec3List.new_zero(length)
+
+    result_bg = Vec3List.new_zero(length)
+    material_dict: Dict[int, Tuple[Material, RayList, HitRecordList]] = dict()
+
+    rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
+    rec: Optional[HitRecord]
+    for i, rec in enumerate(rec_list):
+        if rec is not None:
+            idx = rec.material.idx
+            if idx not in material_dict:
+                material_dict[idx] = (
+                    rec.material, RayList.new_zero(length),
+                    HitRecordList.new(length)
+                )
+            material_dict[idx][1][i] = r[i]
+            material_dict[idx][2][i] = rec
+        else:
+            unit_direction: Vec3 = r[i].direction().unit_vector()
+            if unit_direction.length() == 0:
+                continue
+            t = (unit_direction.y() + 1) * 0.5
+            result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
+    if depth <= 1:
+        return result_bg
+
+    scattered_list = RayList.new_zero(length)
+    attenuation_list = Vec3List.new_zero(length)
+    for key in material_dict:
+        material, ray, hitr = material_dict[key]
+        ray, hitr, idx_list = compress(ray, hitr)
+
+        scattered, attenuation = material.scatter(ray, hitr)
+        scattered, attenuation = decompress(
+            scattered, attenuation, idx_list, length
+        )
+        scattered_list += scattered
+        attenuation_list += attenuation
+    result_hittable = (
+        attenuation_list * ray_color(scattered_list, world, depth-1)
+    )
+
+    return result_hittable + result_bg
 
 
 def scan_line(j: int, world: HittableList, cam: Camera,

@@ -93,7 +93,7 @@ class HitRecordList:
         return HitRecordList(
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.float32),
-            [None] * length,
+            np.full(length, None),
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.bool)
         )
@@ -104,7 +104,7 @@ class HitRecordList:
         return HitRecordList(
             Vec3List.new_zero(length),
             t,
-            [None] * length,
+            np.full(length, None),
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.bool)
         )
