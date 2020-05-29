@@ -98,23 +98,26 @@ class Dielectric(Material):
         sin_theta = np.sqrt(1 - cos_theta**2)
         reflect_prob = self.schlick(cos_theta, etai_over_etat)
 
-        # total internal reflection
-        reflected = unit_direction.reflect(rec.normal)
-        # refraction
-        refracted = unit_direction.refract(rec.normal, etai_over_etat)
-
-        condition = Vec3List.from_array(
+        reflect_condition = (
             (etai_over_etat * sin_theta > 1)
             | (random_float_list(len(r_in)) < reflect_prob)
         )
-        direction = Vec3List(np.where(condition.e, reflected.e, refracted.e))
-
-        condition_0 = rec.t > 0
-        scattered = RayList(
-            rec.p.mul_ndarray(condition_0),
-            direction.mul_ndarray(condition_0)
+        # total internal reflection
+        reflected = (unit_direction.mul_ndarray(reflect_condition)).reflect(
+            rec.normal.mul_ndarray(reflect_condition)
         )
-        attenuation = Vec3List.from_array(condition_0) * Color(1, 1, 1)
+        # refraction
+        refracted = (unit_direction.mul_ndarray(~reflect_condition)).refract(
+            rec.normal.mul_ndarray(~reflect_condition), etai_over_etat
+        )
+        direction = reflected + refracted
+
+        condition = rec.t > 0
+        scattered = RayList(
+            rec.p.mul_ndarray(condition),
+            direction.mul_ndarray(condition)
+        )
+        attenuation = Vec3List.from_array(condition) * Color(1, 1, 1)
         return scattered, attenuation
 
     @staticmethod

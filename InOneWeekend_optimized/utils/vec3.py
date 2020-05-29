@@ -222,14 +222,10 @@ class Vec3List:
         return (self.e * v.e).sum(axis=1)
 
     def mul_ndarray(self, a: np.ndarray) -> Vec3List:
-        return Vec3List(
-            np.transpose(np.transpose(self.e) * a)
-        )
+        return self * Vec3List.from_array(a)
 
     def div_ndarray(self, a: np.ndarray) -> Vec3List:
-        return Vec3List(
-            np.transpose(np.transpose(self.e) / a)
-        )
+        return self / Vec3List.from_array(a)
 
     def length_squared(self) -> np.ndarray:
         return (self.e ** 2).sum(axis=1)

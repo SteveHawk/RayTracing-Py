@@ -16,12 +16,11 @@ from utils.material import Material, Lambertian, Metal, Dielectric
 
 def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
     length = len(r)
-    if depth <= 0 or not r.direction().e.any():
+    if not r.direction().e.any():
         return Vec3List.new_zero(length)
 
     result_bg = Vec3List.new_zero(length)
-    material_dict: Dict[int, Material] = dict()
-    arg_dict: Dict[int, Tuple[RayList, HitRecordList]] = dict()
+    material_dict: Dict[int, Tuple[Material, RayList, HitRecordList]] = dict()
 
     rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
     rec: Optional[HitRecord]
@@ -29,29 +28,28 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
         if rec is not None:
             idx = rec.material.idx
             if idx not in material_dict:
-                material_dict[idx] = rec.material
-                arg_dict[idx] = (
-                    RayList.new_zero(length), HitRecordList.new(length)
+                material_dict[idx] = (
+                    rec.material, RayList.new_zero(length),
+                    HitRecordList.new(length)
                 )
-            arg_dict[idx][0][i] = r[i]
-            arg_dict[idx][1][i] = rec
+            material_dict[idx][1][i] = r[i]
+            material_dict[idx][2][i] = rec
         else:
             unit_direction: Vec3 = r[i].direction().unit_vector()
             if unit_direction.length() == 0:
                 continue
             t = (unit_direction.y() + 1) * 0.5
             result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
+    if depth <= 1:
+        return result_bg
 
     scattered_list = RayList.new_zero(length)
     attenuation_list = Vec3List.new_zero(length)
-
     for key in material_dict:
-        material = material_dict[key]
-        r, h = arg_dict[key]
+        material, r, h = material_dict[key]
         scattered, attenuation = material.scatter(r, h)
         scattered_list += scattered
         attenuation_list += attenuation
-
     result_hittable = (
         attenuation_list * ray_color(scattered_list, world, depth-1)
     )
