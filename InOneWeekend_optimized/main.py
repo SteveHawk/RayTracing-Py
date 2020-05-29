@@ -81,7 +81,7 @@ def random_scene() -> HittableList:
 def compress(r: RayList, rec: HitRecordList) \
         -> Tuple[RayList, HitRecordList, Optional[np.ndarray]]:
     full_rate = (rec.t > 0).sum()
-    if full_rate > 0.5:
+    if full_rate > 0.3:
         return r, rec, None
 
     idx: np.ndarray = np.where(rec.t > 0)[0]
