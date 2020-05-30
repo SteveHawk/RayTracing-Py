@@ -133,7 +133,7 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
     # Background / Sky
     unit_direction = r.direction().unit_vector()
     sky_condition = Vec3List.from_array(
-        (unit_direction.length() > 0) & (rec_list.material < 0)
+        (unit_direction.length() > 0) & (rec_list.material == 0)
     )
     t = (unit_direction.y() + 1) * 0.5
     blue_bg = (
@@ -170,24 +170,6 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
             np.where(mat_condition, rec_list.front_face, empty_array_bool)
         )
         material_dict[mat_idx] = raylist_temp, reclist_temp
-
-    # rec: Optional[HitRecord]
-    # for i, rec in enumerate(rec_list):
-    #     if rec is not None:
-    #         idx = rec.material.idx
-    #         if idx not in material_dict:
-    #             material_dict[idx] = (
-    #                 rec.material, RayList.new_zero(length),
-    #                 HitRecordList.new(length)
-    #             )
-    #         material_dict[idx][1][i] = r[i]
-    #         material_dict[idx][2][i] = rec
-    #     else:
-    #         unit_direction: Vec3 = r[i].direction().unit_vector()
-    #         if unit_direction.length() == 0:
-    #             continue
-    #         t = (unit_direction.y() + 1) * 0.5
-    #         result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
     # Material scatter calculations
     scattered_list = RayList.new_zero(length)
