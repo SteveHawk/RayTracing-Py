@@ -80,11 +80,12 @@ def random_scene() -> HittableList:
 
 def compress(r: RayList, rec: HitRecordList) \
         -> Tuple[RayList, HitRecordList, Optional[np.ndarray]]:
-    full_rate = (rec.t > 0).sum()
-    if full_rate > 0.3:
+    condition = rec.t > 0
+    full_rate = condition.sum() / len(r)
+    if full_rate > 0.6:
         return r, rec, None
 
-    idx: np.ndarray = np.where(rec.t > 0)[0]
+    idx: np.ndarray = np.where(condition)[0]
     new_r = RayList(
         Vec3List(r.orig.get_ndarray(idx)), Vec3List(r.dir.get_ndarray(idx))
     )

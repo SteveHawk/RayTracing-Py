@@ -37,15 +37,16 @@ class HittableList(Hittable):
     def compress(self, r: RayList, closest_so_far: np.ndarray) \
             -> Tuple[RayList, np.ndarray]:
         condition = r.dir.length_squared() > 0
-        full_rate = condition.sum()
-        if full_rate > 0.3:
+        full_rate = condition.sum() / len(r)
+        if full_rate > 0.6:
             self.idx = None
             return r, closest_so_far
 
         self.idx = np.where(condition)[0]
+        self.old_length = len(condition)
         new_r = RayList(
-            r.orig.get_ndarray(self.idx),
-            r.dir.get_ndarray(self.idx)
+            Vec3List(r.orig.get_ndarray(self.idx)),
+            Vec3List(r.dir.get_ndarray(self.idx))
         )
         new_c = closest_so_far[self.idx]
         return new_r, new_c
@@ -54,7 +55,7 @@ class HittableList(Hittable):
         if self.idx is None:
             return rec
         old_idx = np.arange(len(self.idx))
-        new_rec = HitRecordList.new(len(self.idx))
+        new_rec = HitRecordList.new(self.old_length)
         new_rec.p.e[self.idx] = rec.p.e[old_idx]
         new_rec.t[self.idx] = rec.t[old_idx]
         new_rec.material[self.idx] = rec.material[old_idx]
