@@ -163,6 +163,15 @@ class Vec3List:
     def __init__(self, e: np.ndarray):
         self.e = e
 
+    def x(self) -> np.ndarray:
+        return np.transpose(self.e)[0]
+
+    def y(self) -> np.ndarray:
+        return np.transpose(self.e)[1]
+
+    def z(self) -> np.ndarray:
+        return np.transpose(self.e)[2]
+
     def __getitem__(self, idx: int) -> Vec3:
         return Vec3(*self.e[idx])
 

@@ -1,21 +1,30 @@
 import numpy as np  # type: ignore
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Dict
 from utils.vec3 import Vec3List
 from utils.ray import RayList
+from utils.material import Material
 from utils.hittable import Hittable, HitRecordList
 
 
 class HittableList(Hittable):
     def __init__(self, obj: Optional[Hittable] = None) -> None:
         self.objects: List[Hittable] = list()
+        self.materials: Dict[int, Material] = dict()
         if obj is not None:
             self.add(obj)
 
     def add(self, obj: Hittable) -> None:
         self.objects.append(obj)
+        if obj.material.idx < 0:
+            raise ValueError
+        if obj.material.idx not in self.materials:
+            self.materials[obj.material.idx] = obj.material
 
     def clear(self) -> None:
         self.objects.clear()
+
+    def get_materials(self) -> Dict[int, Material]:
+        return self.materials
 
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
             -> HitRecordList:

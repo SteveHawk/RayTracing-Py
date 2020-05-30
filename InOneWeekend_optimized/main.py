@@ -17,15 +17,15 @@ from utils.material import Material, Lambertian, Metal, Dielectric
 def three_ball_scene() -> HittableList:
     world = HittableList()
     world.add(Sphere(
-        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5), 0)
+        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5), 1)
     ))
     world.add(Sphere(
-        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0), 1)
+        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0), 2)
     ))
     world.add(Sphere(
-        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3, 2)
+        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3, 3)
     ))
-    material_dielectric = Dielectric(1.5, 3)
+    material_dielectric = Dielectric(1.5, 4)
     world.add(Sphere(
         Point3(-1, 0, -1), 0.5, material_dielectric
     ))
@@ -38,10 +38,10 @@ def three_ball_scene() -> HittableList:
 def random_scene() -> HittableList:
     world = HittableList()
 
-    ground_material = Lambertian(Color(0.5, 0.5, 0.5), 0)
+    ground_material = Lambertian(Color(0.5, 0.5, 0.5), 1)
     world.add(Sphere(Point3(0, -1000, 0), 1000, ground_material))
 
-    sphere_material_glass = Dielectric(1.5, 1)
+    sphere_material_glass = Dielectric(1.5, 2)
     for a in range(-11, 11):
         for b in range(-11, 11):
             choose_mat = random_float()
@@ -50,7 +50,7 @@ def random_scene() -> HittableList:
             )
 
             if (center - Vec3(4, 0.2, 0)).length() > 0.9:
-                idx = (a*22 + b) + (11*22 + 11) + 5
+                idx = (a*22 + b) + (11*22 + 11) + 6
                 if choose_mat < 0.6:
                     # Diffuse
                     albedo = Color.random() * Color.random()
@@ -66,13 +66,13 @@ def random_scene() -> HittableList:
                     # Glass
                     world.add(Sphere(center, 0.2, sphere_material_glass))
 
-    material_1 = Dielectric(1.5, 2)
+    material_1 = Dielectric(1.5, 3)
     world.add(Sphere(Point3(0, 1, 0), 1, material_1))
 
-    material_2 = Lambertian(Color(0.4, 0.2, 0.1), 3)
+    material_2 = Lambertian(Color(0.4, 0.2, 0.1), 4)
     world.add(Sphere(Point3(-4, 1, 0), 1, material_2))
 
-    material_3 = Metal(Color(0.7, 0.6, 0.5), 0, 4)
+    material_3 = Metal(Color(0.7, 0.6, 0.5), 0, 5)
     world.add(Sphere(Point3(4, 1, 0), 1, material_3))
 
     return world
@@ -121,37 +121,82 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
     if not r.direction().e.any():
         return Vec3List.new_zero(length)
 
-    result_bg = Vec3List.new_zero(length)
-    material_dict: Dict[int, Tuple[Material, RayList, HitRecordList]] = dict()
-
+    # Calculate object hits
     rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
-    rec: Optional[HitRecord]
-    for i, rec in enumerate(rec_list):
-        if rec is not None:
-            idx = rec.material.idx
-            if idx not in material_dict:
-                material_dict[idx] = (
-                    rec.material, RayList.new_zero(length),
-                    HitRecordList.new(length)
-                )
-            material_dict[idx][1][i] = r[i]
-            material_dict[idx][2][i] = rec
-        else:
-            unit_direction: Vec3 = r[i].direction().unit_vector()
-            if unit_direction.length() == 0:
-                continue
-            t = (unit_direction.y() + 1) * 0.5
-            result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
+
+    # Useful empty arrays
+    empty_vec3list = Vec3List.new_zero(length)
+    empty_array_float = np.zeros(length, np.float32)
+    empty_array_bool = np.zeros(length, np.bool)
+    empty_array_int = np.zeros(length, np.int32)
+
+    # Background / Sky
+    unit_direction = r.direction().unit_vector()
+    sky_condition = Vec3List.from_array(
+        (unit_direction.length() > 0) & (rec_list.material < 0)
+    )
+    t = (unit_direction.y() + 1) * 0.5
+    blue_bg = (
+        Vec3List.from_vec3(Color(1, 1, 1), length).mul_ndarray(1 - t)
+        + Vec3List.from_vec3(Color(0.5, 0.7, 1), length).mul_ndarray(t)
+    )
+    result_bg = Vec3List(
+        np.where(sky_condition.e, blue_bg.e, empty_vec3list.e)
+    )
     if depth <= 1:
         return result_bg
 
+    # Per-material preparations
+    materials: Dict[int, Material] = world.get_materials()
+    material_dict: Dict[int, Tuple[RayList, HitRecordList]] = dict()
+    for mat_idx in materials:
+        mat_condition = (rec_list.material == mat_idx)
+        mat_condition_3 = Vec3List.from_array(mat_condition)
+        if not mat_condition.any():
+            continue
+        raylist_temp = RayList(
+            Vec3List(np.where(mat_condition_3.e, r.orig.e, empty_vec3list.e)),
+            Vec3List(np.where(mat_condition_3.e, r.dir.e, empty_vec3list.e))
+        )
+        reclist_temp = HitRecordList(
+            Vec3List(np.where(
+                mat_condition_3.e, rec_list.p.e, empty_vec3list.e
+            )),
+            np.where(mat_condition, rec_list.t, empty_array_float),
+            np.where(mat_condition, rec_list.material, empty_array_int),
+            Vec3List(np.where(
+                mat_condition_3.e, rec_list.normal.e, empty_vec3list.e
+            )),
+            np.where(mat_condition, rec_list.front_face, empty_array_bool)
+        )
+        material_dict[mat_idx] = raylist_temp, reclist_temp
+
+    # rec: Optional[HitRecord]
+    # for i, rec in enumerate(rec_list):
+    #     if rec is not None:
+    #         idx = rec.material.idx
+    #         if idx not in material_dict:
+    #             material_dict[idx] = (
+    #                 rec.material, RayList.new_zero(length),
+    #                 HitRecordList.new(length)
+    #             )
+    #         material_dict[idx][1][i] = r[i]
+    #         material_dict[idx][2][i] = rec
+    #     else:
+    #         unit_direction: Vec3 = r[i].direction().unit_vector()
+    #         if unit_direction.length() == 0:
+    #             continue
+    #         t = (unit_direction.y() + 1) * 0.5
+    #         result_bg[i] = Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
+
+    # Material scatter calculations
     scattered_list = RayList.new_zero(length)
     attenuation_list = Vec3List.new_zero(length)
     for key in material_dict:
-        material, ray, hitr = material_dict[key]
-        ray, hitr, idx_list = compress(ray, hitr)
+        ray, rec = material_dict[key]
+        ray, rec, idx_list = compress(ray, rec)
 
-        scattered, attenuation = material.scatter(ray, hitr)
+        scattered, attenuation = materials[key].scatter(ray, rec)
         scattered, attenuation = decompress(
             scattered, attenuation, idx_list, length
         )

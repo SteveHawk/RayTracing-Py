@@ -51,7 +51,7 @@ class Sphere(Hittable):
         outward_normal = (point - self.center) / self.radius
 
         result = HitRecordList(
-            point, t, np.full(len(r), self.material)
+            point, t, np.full(len(r), self.material.idx)
         ).set_face_normal(r, outward_normal)
 
         return result

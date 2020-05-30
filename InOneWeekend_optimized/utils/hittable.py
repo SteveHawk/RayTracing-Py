@@ -11,11 +11,11 @@ if typing.TYPE_CHECKING:
 
 
 class HitRecord:
-    def __init__(self, point: Point3, t: float, mat: Material,
+    def __init__(self, point: Point3, t: float, mat_idx: int,
                  normal: Vec3 = Vec3(), front_face: bool = False) -> None:
         self.p = point
         self.t = t
-        self.material = mat
+        self.material_idx = mat_idx
         self.normal = normal
         self.front_face = front_face
 
@@ -26,8 +26,7 @@ class HitRecord:
 
 
 class HitRecordList:
-    def __init__(self, point: Vec3List, t: np.ndarray,
-                 mat: List[Optional[Material]],
+    def __init__(self, point: Vec3List, t: np.ndarray, mat: np.ndarray,
                  normal: Vec3List = Vec3List.new_zero(0),
                  front_face: np.ndarray = np.array([])) -> None:
         self.p = point
@@ -46,19 +45,19 @@ class HitRecordList:
         return self
 
     def __getitem__(self, idx: int) -> Optional[HitRecord]:
-        mat = self.material[idx]
-        if mat is None or np.isinf(self.t[idx]):
+        mat_idx: int = self.material[idx]
+        if mat_idx == 0:
             return None
         else:
             return HitRecord(
-                self.p[idx], self.t[idx], mat,
+                self.p[idx], self.t[idx], mat_idx,
                 self.normal[idx], self.front_face[idx]
             )
 
     def __setitem__(self, idx: int, rec: HitRecord) -> None:
         self.p[idx] = rec.p
         self.t[idx] = rec.t
-        self.material[idx] = rec.material
+        self.material[idx] = rec.material_idx
         self.normal[idx] = rec.normal
         self.front_face[idx] = rec.front_face
 
@@ -93,7 +92,7 @@ class HitRecordList:
         return HitRecordList(
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.float32),
-            np.full(length, None),
+            np.zeros(length, dtype=np.int32),
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.bool)
         )
@@ -104,13 +103,17 @@ class HitRecordList:
         return HitRecordList(
             Vec3List.new_zero(length),
             t,
-            np.full(length, None),
+            np.zeros(length, dtype=np.int32),
             Vec3List.new_zero(length),
             np.zeros(length, dtype=np.bool)
         )
 
 
 class Hittable(ABC):
+    @abstractmethod
+    def __init__(self):
+        self.material: Material
+
     @abstractmethod
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
             -> HitRecordList:
