@@ -90,22 +90,22 @@ class HitRecordList:
     @staticmethod
     def new(length: int) -> HitRecordList:
         return HitRecordList(
-            Vec3List.new_zero(length),
+            Vec3List.new_empty(length),
             np.zeros(length, dtype=np.float32),
             np.zeros(length, dtype=np.int32),
-            Vec3List.new_zero(length),
-            np.zeros(length, dtype=np.bool)
+            Vec3List.new_empty(length),
+            np.empty(length, dtype=np.bool)
         )
 
     @staticmethod
     def new_from_t(t: np.ndarray) -> HitRecordList:
         length = len(t)
         return HitRecordList(
-            Vec3List.new_zero(length),
+            Vec3List.new_empty(length),
             t,
             np.zeros(length, dtype=np.int32),
-            Vec3List.new_zero(length),
-            np.zeros(length, dtype=np.bool)
+            Vec3List.new_empty(length),
+            np.empty(length, dtype=np.bool)
         )
 
 
