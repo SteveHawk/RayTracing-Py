@@ -131,14 +131,14 @@ class Vec3:
         x = r * sinPhi * cosTheta
         y = r * sinPhi * sinTheta
         z = r * cosPhi
-        return Vec3List(np.transpose([x, y, z]))
+        return Vec3List(np.transpose(np.array([x, y, z])))
 
     @staticmethod
     def random_unit_vector(size: int) -> Vec3List:
         a = random_float_list(size, 0, 2 * np.pi)
         z = random_float_list(size, -1, 1)
         r = np.sqrt(1 - z**2)
-        return Vec3List(np.transpose([r*np.cos(a), r*np.sin(a), z]))
+        return Vec3List(np.transpose(np.array([r*np.cos(a), r*np.sin(a), z])))
 
     @staticmethod
     def random_in_hemisphere(normal: Vec3List) -> Vec3List:
@@ -194,17 +194,21 @@ class Vec3List:
         return self
 
     def __mul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
-        if isinstance(v, (int, float, np.floating)):
+        if isinstance(v, (Vec3, Vec3List)):
+            return Vec3List(self.e * v.e)
+        elif isinstance(v, (int, float, np.floating)):
             return Vec3List(self.e * v)
-        return Vec3List(self.e * v.e)
+        raise TypeError
 
     __rmul__ = __mul__
 
     def __imul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
-        if isinstance(v, (int, float, np.floating)):
+        if isinstance(v, (Vec3, Vec3List)):
+            self.e *= v.e
+        elif isinstance(v, (int, float, np.floating)):
             self.e *= v
         else:
-            self.e *= v.e
+            raise TypeError
         return self
 
     def __sub__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
