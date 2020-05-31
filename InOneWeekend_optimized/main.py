@@ -241,6 +241,32 @@ def main() -> None:
         ) for j in range(image_height-1, -1, -1)
     )
 
+    # # Profile prologue
+    # import cProfile
+    # import pstats
+    # import io
+    # from pstats import SortKey
+    # pr = cProfile.Profile()
+    # pr.enable()
+
+    # img_list: List[Img] = list()
+    # for j in range(image_height-1, -1, -1):
+    #     img_list.append(
+    #         scan_line(
+    #             j, world, cam,
+    #             image_width, image_height,
+    #             samples_per_pixel, max_depth
+    #         )
+    #     )
+
+    # # Profile epilogue
+    # pr.disable()
+    # s = io.StringIO()
+    # sortby = SortKey.CUMULATIVE
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # print(s.getvalue())
+
     final_img = Img(image_width, image_height)
     final_img.set_array(
         np.concatenate([img.frame for img in img_list])
