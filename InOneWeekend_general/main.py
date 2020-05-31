@@ -147,7 +147,7 @@ def main() -> None:
 
     end_time = time.time()
     print(f"\nDone. Total time: {round(end_time - start_time, 1)} s.")
-    final_img.save("./test.png", True)
+    final_img.save("./output.png", True)
 
 
 if __name__ == "__main__":
