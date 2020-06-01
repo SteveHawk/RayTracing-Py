@@ -15,7 +15,7 @@ class Sphere(Hittable):
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
             -> HitRecordList:
         if isinstance(t_max, (int, float, np.floating)):
-            t_max_list = np.full(len(r), t_max)
+            t_max_list = np.full(len(r), t_max, np.float32)
         else:
             t_max_list = t_max
 
@@ -51,7 +51,7 @@ class Sphere(Hittable):
         outward_normal = (point - self.center) / self.radius
 
         result = HitRecordList(
-            point, t, np.full(len(r), self.material.idx)
+            point, t, np.full(len(r), self.material.idx, dtype=np.int32)
         ).set_face_normal(r, outward_normal)
 
         return result

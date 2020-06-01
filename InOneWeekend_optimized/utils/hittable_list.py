@@ -29,7 +29,7 @@ class HittableList(Hittable):
     def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
             -> HitRecordList:
         if isinstance(t_max, (int, float, np.floating)):
-            closest_so_far = np.full(len(r), t_max)
+            closest_so_far = np.full(len(r), t_max, dtype=np.float32)
         else:
             closest_so_far = t_max
 

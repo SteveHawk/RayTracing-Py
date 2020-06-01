@@ -240,6 +240,10 @@ class Vec3List:
     def div_ndarray(self, a: np.ndarray) -> Vec3List:
         return self / Vec3List.from_array(a)
 
+    def as_float32(self) -> Vec3List:
+        self.e = self.e.astype(np.float32, copy=False)
+        return self
+
     def length_squared(self) -> np.ndarray:
         return (self.e ** 2).sum(axis=1)
 

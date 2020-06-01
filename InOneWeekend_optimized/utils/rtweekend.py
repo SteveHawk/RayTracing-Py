@@ -13,4 +13,4 @@ def random_float(_min: float = 0, _max: float = 1) -> float:
 
 def random_float_list(size: int, _min: float = 0, _max: float = 1) \
         -> np.ndarray:
-    return rng.uniform(_min, _max, size)
+    return rng.uniform(_min, _max, size).astype(np.float32, copy=False)

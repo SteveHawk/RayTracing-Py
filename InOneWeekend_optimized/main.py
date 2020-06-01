@@ -116,10 +116,11 @@ def decompress(r: RayList, a: Vec3List, idx: Optional[np.ndarray],
     return new_r, new_a
 
 
-def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
+def ray_color(r: RayList, world: HittableList, depth: int) \
+        -> Tuple[Optional[RayList], Optional[Vec3List], Vec3List]:
     length = len(r)
     if not r.direction().e.any():
-        return Vec3List.new_zero(length)
+        return None, None, Vec3List.new_zero(length)
 
     # Calculate object hits
     rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
@@ -144,7 +145,7 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
         np.where(sky_condition.e, blue_bg.e, empty_vec3list.e)
     )
     if depth <= 1:
-        return result_bg
+        return None, None, result_bg
 
     # Per-material preparations
     materials: Dict[int, Material] = world.get_materials()
@@ -184,30 +185,42 @@ def ray_color(r: RayList, world: HittableList, depth: int) -> Vec3List:
         )
         scattered_list += scattered
         attenuation_list += attenuation
-    result_hittable = (
-        attenuation_list * ray_color(scattered_list, world, depth-1)
-    )
 
-    return result_hittable + result_bg
+    return scattered_list, attenuation_list, result_bg
 
 
-def scan_line(j: int, world: HittableList, cam: Camera,
-              image_width: int, image_height: int,
-              samples_per_pixel: int, max_depth: int) -> Img:
-    img = Img(image_width, 1)
-    row_pixel_color = Vec3List.from_vec3(Color(), image_width)
+def ray_color_loop(r: RayList, world: HittableList, depth: int) -> Vec3List:
+    attenuation_list: Dict[int, Vec3List] = dict()
+    result_bg_list: Dict[int, Vec3List] = dict()
+    length: int = 0
+    ray: RayList = r
+    for d in range(depth, 0, -1):
+        scattered, attenuation, result_bg = ray_color(ray, world, d)
+        result_bg_list[length] = result_bg.as_float32()
+        if scattered is None or attenuation is None:
+            break
+        attenuation_list[length] = attenuation.as_float32()
+        ray = scattered
+        length += 1
 
-    for s in range(samples_per_pixel):
-        u: np.ndarray = (random_float_list(image_width)
-                         + np.arange(image_width)) / (image_width - 1)
-        v: np.ndarray = (random_float_list(image_width)
-                         + j) / (image_height - 1)
-        r: RayList = cam.get_ray(u, v)
-        row_pixel_color += ray_color(r, world, max_depth)
+    result = result_bg_list[length]
+    for i in range(length - 1, -1, -1):
+        result = result * attenuation_list[i] + result_bg_list[i]
+    return result
 
-    img.write_pixel_list(0, row_pixel_color, samples_per_pixel)
-    print(f"Scanlines remaining: {j} ", end="\r")
-    return img
+
+def scan_frame(world: HittableList, cam: Camera,
+               image_width: int, image_height: int,
+               max_depth: int) -> Vec3List:
+    length = image_width * image_height
+    i_list = np.tile(np.arange(image_width), image_height)
+    j_list = np.concatenate(np.transpose(
+        np.tile(np.arange(image_height), (image_width, 1))
+    ))
+    u: np.ndarray = (random_float_list(length) + i_list) / (image_width - 1)
+    v: np.ndarray = (random_float_list(length) + j_list) / (image_height - 1)
+    r: RayList = cam.get_ray(u, v)
+    return ray_color_loop(r, world, max_depth)
 
 
 def main() -> None:
@@ -233,12 +246,10 @@ def main() -> None:
     start_time = time.time()
 
     n_processer = multiprocessing.cpu_count()
-    img_list: List[Img] = Parallel(n_jobs=n_processer)(
-        delayed(scan_line)(
-            j, world, cam,
-            image_width, image_height,
-            samples_per_pixel, max_depth
-        ) for j in range(image_height-1, -1, -1)
+    img_list: List[Vec3List] = Parallel(n_jobs=n_processer, verbose=10)(
+        delayed(scan_frame)(
+            world, cam, image_width, image_height, max_depth
+        ) for s in range(samples_per_pixel)
     )
 
     # # Profile prologue
@@ -249,14 +260,10 @@ def main() -> None:
     # pr = cProfile.Profile()
     # pr.enable()
 
-    # img_list: List[Img] = list()
-    # for j in range(image_height-1, -1, -1):
+    # img_list: List[Vec3List] = list()
+    # for s in range(samples_per_pixel):
     #     img_list.append(
-    #         scan_line(
-    #             j, world, cam,
-    #             image_width, image_height,
-    #             samples_per_pixel, max_depth
-    #         )
+    #         scan_frame(world, cam, image_width, image_height, max_depth)
     #     )
 
     # # Profile epilogue
@@ -267,13 +274,13 @@ def main() -> None:
     # ps.print_stats()
     # print(s.getvalue())
 
-    final_img = Img(image_width, image_height)
-    final_img.set_array(
-        np.concatenate([img.frame for img in img_list])
-    )
-
     end_time = time.time()
     print(f"\nDone. Total time: {round(end_time - start_time, 1)} s.")
+
+    final_img = Img(image_width, image_height)
+    for img in img_list:
+        final_img.write_frame(img)
+    final_img.average(samples_per_pixel).gamma(2).up_side_down()
     final_img.save("./output.png", True)
 
 
