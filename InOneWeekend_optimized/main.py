@@ -1,6 +1,7 @@
 import numpy as np  # type: ignore
 import multiprocessing
 import time
+import os
 from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional, Dict, Tuple
 from utils.vec3 import Vec3, Point3, Color, Vec3List
@@ -147,19 +148,21 @@ def ray_color(r: RayList, world: HittableList, depth: int) \
     if depth <= 1:
         return None, None, result_bg
 
-    # Per-material preparations
+    # Material scatter calculations
     materials: Dict[int, Material] = world.get_materials()
-    material_dict: Dict[int, Tuple[RayList, HitRecordList]] = dict()
+    scattered_list = RayList.new_zero(length)
+    attenuation_list = Vec3List.new_zero(length)
     for mat_idx in materials:
         mat_condition = (rec_list.material == mat_idx)
         mat_condition_3 = Vec3List.from_array(mat_condition)
         if not mat_condition.any():
             continue
-        raylist_temp = RayList(
+
+        ray = RayList(
             Vec3List(np.where(mat_condition_3.e, r.orig.e, empty_vec3list.e)),
             Vec3List(np.where(mat_condition_3.e, r.dir.e, empty_vec3list.e))
         )
-        reclist_temp = HitRecordList(
+        rec = HitRecordList(
             Vec3List(np.where(
                 mat_condition_3.e, rec_list.p.e, empty_vec3list.e
             )),
@@ -170,16 +173,9 @@ def ray_color(r: RayList, world: HittableList, depth: int) \
             )),
             np.where(mat_condition, rec_list.front_face, empty_array_bool)
         )
-        material_dict[mat_idx] = raylist_temp, reclist_temp
-
-    # Material scatter calculations
-    scattered_list = RayList.new_zero(length)
-    attenuation_list = Vec3List.new_zero(length)
-    for key in material_dict:
-        ray, rec = material_dict[key]
         ray, rec, idx_list = compress(ray, rec)
 
-        scattered, attenuation = materials[key].scatter(ray, rec)
+        scattered, attenuation = materials[mat_idx].scatter(ray, rec)
         scattered, attenuation = decompress(
             scattered, attenuation, idx_list, length
         )
@@ -195,6 +191,7 @@ def ray_color_loop(r: RayList, world: HittableList, depth: int) -> Vec3List:
     length: int = 0
     ray: RayList = r
     for d in range(depth, 0, -1):
+        print(f"PID {os.getpid()}: {depth - d} / {depth}   ", end="\r")
         scattered, attenuation, result_bg = ray_color(ray, world, d)
         result_bg_list[length] = result_bg.as_float32()
         if scattered is None or attenuation is None:
