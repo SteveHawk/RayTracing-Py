@@ -1,4 +1,5 @@
 from __future__ import annotations
+import cupy as cp  # type: ignore
 import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
 from typing import List
@@ -9,9 +10,9 @@ class Img:
     def __init__(self, w: int, h: int) -> None:
         self.w = w
         self.h = h
-        self.frame: np.ndarray = np.zeros((h, w, 3), dtype=np.float64)
+        self.frame: cp.ndarray = cp.zeros((h, w, 3), dtype=cp.float64)
 
-    def set_frame(self, array: np.ndarray) -> None:
+    def set_frame(self, array: cp.ndarray) -> None:
         self.frame = array
 
     def write_pixel(self, w: int, h: int, pixel_color: Color,
@@ -23,7 +24,7 @@ class Img:
                          samples_per_pixel: int) -> None:
         color = pixel_color_list.e / samples_per_pixel
         gamma: float = 2
-        self.frame[h] = np.clip(color, 0, 0.999) ** (1 / gamma)
+        self.frame[h] = cp.clip(color, 0, 0.999) ** (1 / gamma)
 
     def write_frame(self, frame: Vec3List) -> Img:
         self.frame += frame.e.reshape((self.h, self.w, 3))
@@ -34,7 +35,7 @@ class Img:
         return self
 
     def gamma(self, gamma: float) -> Img:
-        self.frame = np.clip(self.frame, 0, 0.999) ** (1 / gamma)
+        self.frame = cp.clip(self.frame, 0, 0.999) ** (1 / gamma)
         return self
 
     def up_side_down(self) -> Img:
@@ -42,7 +43,8 @@ class Img:
         return self
 
     def save(self, path: str, show: bool = False) -> None:
-        im = Image.fromarray(np.uint8(self.frame * 255))
+        final_array = cp.asnumpy(self.frame)
+        im = Image.fromarray((np.uint8(final_array * 255)))
         im.save(path)
         if show:
             im.show()

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 from typing import Tuple
 from utils.vec3 import Vec3, Point3, Vec3List
 
@@ -48,13 +48,13 @@ class RayList:
             self.dir + r.dir
         )
 
-    def at(self, t: np.ndarray) -> Vec3List:
+    def at(self, t: cp.ndarray) -> Vec3List:
         # t's shape: n * 1
         return self.orig + self.dir.mul_ndarray(t)
 
     @staticmethod
     def single(r: Ray) -> RayList:
-        return RayList(np.array([r.orig.e]), np.array([r.dir.e]))
+        return RayList(cp.array([r.orig.e]), cp.array([r.dir.e]))
 
     @staticmethod
     def new_empty(length: int) -> RayList:

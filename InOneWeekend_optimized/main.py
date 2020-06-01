@@ -1,4 +1,4 @@
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 import multiprocessing
 import time
 import os
@@ -80,13 +80,13 @@ def random_scene() -> HittableList:
 
 
 def compress(r: RayList, rec: HitRecordList) \
-        -> Tuple[RayList, HitRecordList, Optional[np.ndarray]]:
+        -> Tuple[RayList, HitRecordList, Optional[cp.ndarray]]:
     condition = rec.t > 0
     full_rate = condition.sum() / len(r)
-    if full_rate > 0.8:
+    if full_rate > 0.5:
         return r, rec, None
 
-    idx: np.ndarray = np.where(condition)[0]
+    idx: cp.ndarray = cp.where(condition)[0]
     new_r = RayList(
         Vec3List(r.orig.get_ndarray(idx)), Vec3List(r.dir.get_ndarray(idx))
     )
@@ -100,12 +100,12 @@ def compress(r: RayList, rec: HitRecordList) \
     return new_r, new_rec, idx
 
 
-def decompress(r: RayList, a: Vec3List, idx: Optional[np.ndarray],
+def decompress(r: RayList, a: Vec3List, idx: Optional[cp.ndarray],
                length: int) -> Tuple[RayList, Vec3List]:
     if idx is None:
         return r, a
 
-    old_idx = np.arange(len(idx))
+    old_idx = cp.arange(len(idx))
 
     new_r = RayList.new_zero(length)
     new_r.orig.e[idx] = r.orig.e[old_idx]
@@ -124,13 +124,13 @@ def ray_color(r: RayList, world: HittableList, depth: int) \
         return None, None, Vec3List.new_zero(length)
 
     # Calculate object hits
-    rec_list: HitRecordList = world.hit(r, 0.001, np.inf)
+    rec_list: HitRecordList = world.hit(r, 0.001, cp.inf)
 
     # Useful empty arrays
     empty_vec3list = Vec3List.new_zero(length)
-    empty_array_float = np.zeros(length, np.float32)
-    empty_array_bool = np.zeros(length, np.bool)
-    empty_array_int = np.zeros(length, np.int32)
+    empty_array_float = cp.zeros(length, cp.float32)
+    empty_array_bool = cp.zeros(length, cp.bool)
+    empty_array_int = cp.zeros(length, cp.int32)
 
     # Background / Sky
     unit_direction = r.direction().unit_vector()
@@ -143,7 +143,7 @@ def ray_color(r: RayList, world: HittableList, depth: int) \
         + Vec3List.from_vec3(Color(0.5, 0.7, 1), length).mul_ndarray(t)
     )
     result_bg = Vec3List(
-        np.where(sky_condition.e, blue_bg.e, empty_vec3list.e)
+        cp.where(sky_condition.e, blue_bg.e, empty_vec3list.e)
     )
     if depth <= 1:
         return None, None, result_bg
@@ -159,19 +159,19 @@ def ray_color(r: RayList, world: HittableList, depth: int) \
             continue
 
         ray = RayList(
-            Vec3List(np.where(mat_condition_3.e, r.orig.e, empty_vec3list.e)),
-            Vec3List(np.where(mat_condition_3.e, r.dir.e, empty_vec3list.e))
+            Vec3List(cp.where(mat_condition_3.e, r.orig.e, empty_vec3list.e)),
+            Vec3List(cp.where(mat_condition_3.e, r.dir.e, empty_vec3list.e))
         )
         rec = HitRecordList(
-            Vec3List(np.where(
+            Vec3List(cp.where(
                 mat_condition_3.e, rec_list.p.e, empty_vec3list.e
             )),
-            np.where(mat_condition, rec_list.t, empty_array_float),
-            np.where(mat_condition, rec_list.material, empty_array_int),
-            Vec3List(np.where(
+            cp.where(mat_condition, rec_list.t, empty_array_float),
+            cp.where(mat_condition, rec_list.material, empty_array_int),
+            Vec3List(cp.where(
                 mat_condition_3.e, rec_list.normal.e, empty_vec3list.e
             )),
-            np.where(mat_condition, rec_list.front_face, empty_array_bool)
+            cp.where(mat_condition, rec_list.front_face, empty_array_bool)
         )
         ray, rec, idx_list = compress(ray, rec)
 
@@ -210,12 +210,12 @@ def scan_frame(world: HittableList, cam: Camera,
                image_width: int, image_height: int,
                max_depth: int) -> Vec3List:
     length = image_width * image_height
-    i_list = np.tile(np.arange(image_width), image_height)
-    j_list = np.concatenate(np.transpose(
-        np.tile(np.arange(image_height), (image_width, 1))
+    i_list = cp.tile(cp.arange(image_width), image_height)
+    j_list = cp.concatenate(cp.transpose(
+        cp.tile(cp.arange(image_height), (image_width, 1))
     ))
-    u: np.ndarray = (random_float_list(length) + i_list) / (image_width - 1)
-    v: np.ndarray = (random_float_list(length) + j_list) / (image_height - 1)
+    u: cp.ndarray = (random_float_list(length) + i_list) / (image_width - 1)
+    v: cp.ndarray = (random_float_list(length) + j_list) / (image_height - 1)
     r: RayList = cam.get_ray(u, v)
     return ray_color_loop(r, world, max_depth)
 
@@ -242,8 +242,7 @@ def main() -> None:
     print("Start rendering.")
     start_time = time.time()
 
-    n_processer = multiprocessing.cpu_count()
-    img_list: List[Vec3List] = Parallel(n_jobs=n_processer, verbose=10)(
+    img_list: List[Vec3List] = Parallel(n_jobs=1, verbose=20)(
         delayed(scan_frame)(
             world, cam, image_width, image_height, max_depth
         ) for s in range(samples_per_pixel)

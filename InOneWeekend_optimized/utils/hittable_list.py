@@ -1,4 +1,4 @@
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 from typing import List, Optional, Union, Tuple, Dict
 from utils.vec3 import Vec3List
 from utils.ray import RayList
@@ -26,10 +26,10 @@ class HittableList(Hittable):
     def get_materials(self) -> Dict[int, Material]:
         return self.materials
 
-    def hit(self, r: RayList, t_min: float, t_max: Union[float, np.ndarray]) \
+    def hit(self, r: RayList, t_min: float, t_max: Union[float, cp.ndarray]) \
             -> HitRecordList:
-        if isinstance(t_max, (int, float, np.floating)):
-            closest_so_far = np.full(len(r), t_max, dtype=np.float32)
+        if isinstance(t_max, (int, float, cp.floating)):
+            closest_so_far = cp.full(len(r), t_max, dtype=cp.float32)
         else:
             closest_so_far = t_max
 
@@ -43,15 +43,15 @@ class HittableList(Hittable):
 
         return self.decompress(rec)
 
-    def compress(self, r: RayList, closest_so_far: np.ndarray) \
-            -> Tuple[RayList, np.ndarray]:
+    def compress(self, r: RayList, closest_so_far: cp.ndarray) \
+            -> Tuple[RayList, cp.ndarray]:
         condition = r.dir.length_squared() > 0
         full_rate = condition.sum() / len(r)
-        if full_rate > 0.8:
+        if full_rate > 0.5:
             self.idx = None
             return r, closest_so_far
 
-        self.idx = np.where(condition)[0]
+        self.idx = cp.where(condition)[0]
         self.old_length = len(condition)
         new_r = RayList(
             Vec3List(r.orig.get_ndarray(self.idx)),
@@ -63,7 +63,7 @@ class HittableList(Hittable):
     def decompress(self, rec: HitRecordList) -> HitRecordList:
         if self.idx is None:
             return rec
-        old_idx = np.arange(len(self.idx))
+        old_idx = cp.arange(len(self.idx))
         new_rec = HitRecordList.new(self.old_length)
         new_rec.p.e[self.idx] = rec.p.e[old_idx]
         new_rec.t[self.idx] = rec.t[old_idx]

@@ -1,4 +1,4 @@
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 from typing import List
 from utils.vec3 import Vec3, Point3, Vec3List
 from utils.ray import RayList
@@ -13,7 +13,7 @@ class Camera:
         vfov: vertical field-of-view in degress
         """
         theta: float = degrees_to_radians(vfov)
-        h: float = np.tan(theta / 2)
+        h: float = cp.tan(theta / 2)
         viewport_height: float = 2 * h
         viewport_width: float = aspect_ratio * viewport_height
 
@@ -30,10 +30,10 @@ class Camera:
         )
         self.lens_radius: float = aperture / 2
 
-    def get_ray(self, s: np.ndarray, t: np.ndarray) -> RayList:
+    def get_ray(self, s: cp.ndarray, t: cp.ndarray) -> RayList:
         if len(s) != len(t):
             raise ValueError
-        rd: np.ndarray = Vec3.random_in_unit_disk(len(s)) * self.lens_radius
+        rd: cp.ndarray = Vec3.random_in_unit_disk(len(s)) * self.lens_radius
 
         u_multi = Vec3List.from_vec3(self.u, len(s))
         v_multi = Vec3List.from_vec3(self.v, len(s))

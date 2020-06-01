@@ -1,12 +1,12 @@
 from __future__ import annotations
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 from typing import Union
 from utils.rtweekend import random_float, random_float_list
 
 
 class Vec3:
     def __init__(self, e0: float = 0, e1: float = 0, e2: float = 0) -> None:
-        self.e: np.ndarray = np.array([e0, e1, e2], dtype=np.float32)
+        self.e: cp.ndarray = cp.array([e0, e1, e2], dtype=cp.float32)
 
     def x(self) -> float:
         return self.e[0]
@@ -27,7 +27,7 @@ class Vec3:
         return self.e @ self.e
 
     def length(self) -> float:
-        return np.sqrt(self.length_squared())
+        return cp.sqrt(self.length_squared())
 
     def __add__(self, v: Vec3) -> Vec3:
         return Vec3(*(self.e + v.e))
@@ -41,9 +41,9 @@ class Vec3:
     def __mul__(self, v: Union[Vec3, int, float]) -> Vec3:
         if isinstance(v, Vec3):
             return Vec3(*(self.e * v.e))
-        elif isinstance(v, (int, float, np.floating)):
-            return Vec3(*(self.e * v))
-        raise TypeError
+        # elif isinstance(v, (int, float, cp.floating)):
+        return Vec3(*(self.e * v))
+        # raise TypeError
 
     def __matmul__(self, v: Vec3) -> float:
         return self.e @ v.e
@@ -58,10 +58,10 @@ class Vec3:
     def __imul__(self, v: Union[Vec3, int, float]) -> Vec3:
         if isinstance(v, Vec3):
             self.e *= v.e
-        elif isinstance(v, (int, float, np.floating)):
-            self.e *= v
+        # elif isinstance(v, (int, float, cp.floating)):
         else:
-            raise TypeError
+            self.e *= v
+            # raise TypeError
         return self
 
     def __itruediv__(self, t: float) -> Vec3:
@@ -69,7 +69,7 @@ class Vec3:
         return self
 
     def cross(self, v: Vec3) -> Vec3:
-        return Vec3(*np.cross(self.e, v.e))
+        return Vec3(*cp.cross(self.e, v.e))
 
     def unit_vector(self) -> Vec3:
         length = self.length()
@@ -78,7 +78,7 @@ class Vec3:
         return (self / length)
 
     def clamp(self, _min: float, _max: float) -> Vec3:
-        return Vec3(*np.clip(self.e, _min, _max))
+        return Vec3(*cp.clip(self.e, _min, _max))
 
     def gamma(self, gamma: float) -> Vec3:
         return Vec3(*(self.e ** (1 / gamma)))
@@ -90,7 +90,7 @@ class Vec3:
         cos_theta: float = -self @ normal
         r_out_parallel: Vec3 = (self + normal*cos_theta) * etai_over_etat
         r_out_prep: Vec3 = \
-            normal * (-np.sqrt(1 - r_out_parallel.length_squared()))
+            normal * (-cp.sqrt(1 - r_out_parallel.length_squared()))
         return r_out_parallel + r_out_prep
 
     @staticmethod
@@ -105,13 +105,13 @@ class Vec3:
         """
         u = random_float()
         v = random_float()
-        theta = u * 2 * np.pi
-        phi = np.arccos(2 * v - 1)
-        r = np.cbrt(random_float())
-        sinTheta = np.sin(theta)
-        cosTheta = np.cos(theta)
-        sinPhi = np.sin(phi)
-        cosPhi = np.cos(phi)
+        theta = u * 2 * cp.pi
+        phi = cp.arccos(2 * v - 1)
+        r = cp.cbrt(random_float())
+        sinTheta = cp.sin(theta)
+        cosTheta = cp.cos(theta)
+        sinPhi = cp.sin(phi)
+        cosPhi = cp.cos(phi)
         x = r * sinPhi * cosTheta
         y = r * sinPhi * sinTheta
         z = r * cosPhi
@@ -121,37 +121,37 @@ class Vec3:
     def random_in_unit_sphere_list(size: int) -> Vec3List:
         u = random_float_list(size)
         v = random_float_list(size)
-        theta = u * 2 * np.pi
-        phi = np.arccos(2 * v - 1)
-        r = np.cbrt(random_float_list(size))
-        sinTheta = np.sin(theta)
-        cosTheta = np.cos(theta)
-        sinPhi = np.sin(phi)
-        cosPhi = np.cos(phi)
+        theta = u * 2 * cp.pi
+        phi = cp.arccos(2 * v - 1)
+        r = cp.cbrt(random_float_list(size))
+        sinTheta = cp.sin(theta)
+        cosTheta = cp.cos(theta)
+        sinPhi = cp.sin(phi)
+        cosPhi = cp.cos(phi)
         x = r * sinPhi * cosTheta
         y = r * sinPhi * sinTheta
         z = r * cosPhi
-        return Vec3List(np.transpose(np.array([x, y, z])))
+        return Vec3List(cp.transpose(cp.array([x, y, z])))
 
     @staticmethod
     def random_unit_vector(size: int) -> Vec3List:
-        a = random_float_list(size, 0, 2 * np.pi)
+        a = random_float_list(size, 0, 2 * cp.pi)
         z = random_float_list(size, -1, 1)
-        r = np.sqrt(1 - z**2)
-        return Vec3List(np.transpose(np.array([r*np.cos(a), r*np.sin(a), z])))
+        r = cp.sqrt(1 - z**2)
+        return Vec3List(cp.transpose(cp.array([r*cp.cos(a), r*cp.sin(a), z])))
 
     @staticmethod
     def random_in_hemisphere(normal: Vec3List) -> Vec3List:
         in_unit_sphere = Vec3.random_in_unit_sphere_list(len(normal))
-        return Vec3List(np.where(
+        return Vec3List(cp.where(
             in_unit_sphere @ normal > 0, in_unit_sphere.e, -in_unit_sphere.e
         ))
 
     @staticmethod
-    def random_in_unit_disk(size: int) -> np.ndarray:
-        r = np.sqrt(random_float_list(size))
-        theta = random_float_list(size) * 2 * np.pi
-        return np.array([r*np.cos(theta), r*np.sin(theta)])
+    def random_in_unit_disk(size: int) -> cp.ndarray:
+        r = cp.sqrt(random_float_list(size))
+        theta = random_float_list(size) * 2 * cp.pi
+        return cp.array([r*cp.cos(theta), r*cp.sin(theta)])
 
 
 # Type aliases for Vec3
@@ -160,22 +160,22 @@ Color = Vec3  # RGB color
 
 
 class Vec3List:
-    def __init__(self, e: np.ndarray):
+    def __init__(self, e: cp.ndarray):
         self.e = e
 
-    def x(self) -> np.ndarray:
-        return np.transpose(self.e)[0]
+    def x(self) -> cp.ndarray:
+        return cp.transpose(self.e)[0]
 
-    def y(self) -> np.ndarray:
-        return np.transpose(self.e)[1]
+    def y(self) -> cp.ndarray:
+        return cp.transpose(self.e)[1]
 
-    def z(self) -> np.ndarray:
-        return np.transpose(self.e)[2]
+    def z(self) -> cp.ndarray:
+        return cp.transpose(self.e)[2]
 
     def __getitem__(self, idx: int) -> Vec3:
         return Vec3(*self.e[idx])
 
-    def get_ndarray(self, idx: int) -> np.ndarray:
+    def get_ndarray(self, idx: int) -> cp.ndarray:
         return self.e[idx]
 
     def __setitem__(self, idx: int, val: Vec3) -> None:
@@ -196,19 +196,19 @@ class Vec3List:
     def __mul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
         if isinstance(v, (Vec3, Vec3List)):
             return Vec3List(self.e * v.e)
-        elif isinstance(v, (int, float, np.floating)):
-            return Vec3List(self.e * v)
-        raise TypeError
+        # elif isinstance(v, (int, float, cp.floating)):
+        return Vec3List(self.e * v)
+        # raise TypeError
 
     __rmul__ = __mul__
 
     def __imul__(self, v: Union[Vec3, Vec3List, float]) -> Vec3List:
         if isinstance(v, (Vec3, Vec3List)):
             self.e *= v.e
-        elif isinstance(v, (int, float, np.floating)):
-            self.e *= v
+        # elif isinstance(v, (int, float, cp.floating)):
         else:
-            raise TypeError
+            self.e *= v
+            # raise TypeError
         return self
 
     def __sub__(self, v: Union[Vec3, Vec3List]) -> Vec3List:
@@ -227,39 +227,39 @@ class Vec3List:
     def __truediv__(self, v: Union[Vec3List, float]) -> Vec3List:
         if isinstance(v, Vec3List):
             return Vec3List(self.e / v.e)
-        elif isinstance(v, (int, float, np.floating)):
-            return Vec3List(self.e / v)
-        raise TypeError
+        # elif isinstance(v, (int, float, cp.floating)):
+        return Vec3List(self.e / v)
+        # raise TypeError
 
-    def __matmul__(self, v: Vec3List) -> np.ndarray:
+    def __matmul__(self, v: Vec3List) -> cp.ndarray:
         return (self.e * v.e).sum(axis=1)
 
-    def mul_ndarray(self, a: np.ndarray) -> Vec3List:
+    def mul_ndarray(self, a: cp.ndarray) -> Vec3List:
         return self * Vec3List.from_array(a)
 
-    def div_ndarray(self, a: np.ndarray) -> Vec3List:
+    def div_ndarray(self, a: cp.ndarray) -> Vec3List:
         return self / Vec3List.from_array(a)
 
     def as_float32(self) -> Vec3List:
-        self.e = self.e.astype(np.float32, copy=False)
+        self.e = self.e.astype(cp.float32, copy=False)
         return self
 
-    def length_squared(self) -> np.ndarray:
+    def length_squared(self) -> cp.ndarray:
         return (self.e ** 2).sum(axis=1)
 
-    def length(self) -> np.ndarray:
-        return np.sqrt(self.length_squared())
+    def length(self) -> cp.ndarray:
+        return cp.sqrt(self.length_squared())
 
     def unit_vector(self) -> Vec3List:
         length = self.length()
         condition = length > 0
-        length_non_zero = np.where(condition, length, 1)
+        length_non_zero = cp.where(condition, length, 1)
         return self.div_ndarray(length_non_zero).mul_ndarray(condition)
 
     def reflect(self, n: Vec3List) -> Vec3List:
         return self - (n.mul_ndarray(self @ n)) * 2
 
-    def refract(self, normal: Vec3List, etai_over_etat: np.ndarray) \
+    def refract(self, normal: Vec3List, etai_over_etat: cp.ndarray) \
             -> Vec3List:
         cos_theta = -self @ normal
 
@@ -268,25 +268,25 @@ class Vec3List:
         ).mul_ndarray(etai_over_etat)
 
         r_out_prep = normal.mul_ndarray(
-            -np.sqrt(1 - r_out_parallel.length_squared())
+            -cp.sqrt(1 - r_out_parallel.length_squared())
         )
 
         return r_out_parallel + r_out_prep
 
     @staticmethod
     def from_vec3(v: Vec3, length: int) -> Vec3List:
-        vl = np.tile(v.e, (length, 1))
+        vl = cp.tile(v.e, (length, 1))
         return Vec3List(vl)
 
     @staticmethod
-    def from_array(a: np.ndarray) -> Vec3List:
-        vl = np.transpose(np.tile(a, (3, 1)))
+    def from_array(a: cp.ndarray) -> Vec3List:
+        vl = cp.transpose(cp.tile(a, (3, 1)))
         return Vec3List(vl)
 
     @staticmethod
     def new_empty(length: int) -> Vec3List:
-        return Vec3List(np.empty((length, 3), dtype=np.float32))
+        return Vec3List(cp.empty((length, 3), dtype=cp.float32))
 
     @staticmethod
     def new_zero(length: int) -> Vec3List:
-        return Vec3List(np.zeros((length, 3), dtype=np.float32))
+        return Vec3List(cp.zeros((length, 3), dtype=cp.float32))

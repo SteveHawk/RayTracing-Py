@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional
-import numpy as np  # type: ignore
+import cupy as cp  # type: ignore
 from utils.ray import RayList
 from utils.vec3 import Vec3, Color, Vec3List
 from utils.hittable import HitRecordList
@@ -88,14 +88,14 @@ class Dielectric(Material):
 
     def scatter(self, r_in: RayList, rec: HitRecordList) \
             -> Tuple[RayList, Vec3List]:
-        etai_over_etat = np.where(
+        etai_over_etat = cp.where(
             rec.front_face, 1 / self.ref_idx, self.ref_idx
         )
 
         unit_direction = r_in.direction().unit_vector()
         cos_theta = -unit_direction @ rec.normal
-        cos_theta = np.where(cos_theta > 1, 1, cos_theta)
-        sin_theta = np.sqrt(1 - cos_theta**2)
+        cos_theta = cp.where(cos_theta > 1, 1, cos_theta)
+        sin_theta = cp.sqrt(1 - cos_theta**2)
         reflect_prob = self.schlick(cos_theta, etai_over_etat)
 
         reflect_condition = (
@@ -121,7 +121,7 @@ class Dielectric(Material):
         return scattered, attenuation
 
     @staticmethod
-    def schlick(cosine: np.ndarray, ref_idx: np.ndarray) -> np.ndarray:
+    def schlick(cosine: cp.ndarray, ref_idx: cp.ndarray) -> cp.ndarray:
         r0 = (1 - ref_idx) / (1 + ref_idx)
         r0 **= 2
         return r0 + (1 - r0) * ((1 - cosine) ** 5)
