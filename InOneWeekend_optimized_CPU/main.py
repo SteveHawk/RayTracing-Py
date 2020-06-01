@@ -206,7 +206,6 @@ def scan_line(j: int, world: HittableList, cam: Camera,
         row_pixel_color += ray_color(r, world, max_depth)
 
     img.write_pixel_list(0, row_pixel_color, samples_per_pixel)
-    print(f"Scanlines remaining: {j} ", end="\r")
     return img
 
 
@@ -233,7 +232,7 @@ def main() -> None:
     start_time = time.time()
 
     n_processer = multiprocessing.cpu_count()
-    img_list: List[Img] = Parallel(n_jobs=n_processer)(
+    img_list: List[Img] = Parallel(n_jobs=n_processer, verbose=10)(
         delayed(scan_line)(
             j, world, cam,
             image_width, image_height,
