@@ -47,7 +47,7 @@ class HittableList(Hittable):
             -> Tuple[RayList, np.ndarray]:
         condition = r.dir.length_squared() > 0
         full_rate = condition.sum() / len(r)
-        if full_rate > 0.6:
+        if full_rate > 0.8:
             self.idx = None
             return r, closest_so_far
 

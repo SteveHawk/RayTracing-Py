@@ -75,16 +75,39 @@ class HitRecordList:
         self.idx += 1
         return result
 
+    def set_compress_info(self, idx: Optional[np.ndarray]) -> HitRecordList:
+        self.compress_idx = idx
+        return self
+
     def update(self, new: HitRecordList) -> HitRecordList:
-        change = (new.t < self.t) & (new.t > 0)
+        if new.compress_idx is not None:
+            idx = new.compress_idx
+            old_idx = np.arange(len(idx))
+        else:
+            idx = slice(0, -1)
+            old_idx = slice(0, -1)
+
+        change = (new.t[old_idx] < self.t[idx]) & (new.t[old_idx] > 0)
+        if not change.any():
+            return self
         change_3 = Vec3List.from_array(change)
-        self.p = Vec3List(np.where(change_3.e, new.p.e, self.p.e))
-        self.t = np.where(change, new.t, self.t)
-        self.material = np.where(change, new.material, self.material)
-        self.normal = Vec3List(
-            np.where(change_3.e, new.normal.e, self.normal.e)
+
+        self.p.e[idx] = np.where(
+            change_3.e, new.p.e[old_idx], self.p.e[idx]
         )
-        self.front_face = np.where(change, new.front_face, self.front_face)
+        self.t[idx] = np.where(
+            change, new.t[old_idx], self.t[idx]
+        )
+        self.material[idx] = np.where(
+            change, new.material[old_idx], self.material[idx]
+        )
+        self.normal.e[idx] = np.where(
+            change_3.e, new.normal.e[old_idx], self.normal.e[idx]
+        )
+        self.front_face[idx] = np.where(
+            change, new.front_face[old_idx], self.front_face[idx]
+        )
+
         return self
 
     @staticmethod

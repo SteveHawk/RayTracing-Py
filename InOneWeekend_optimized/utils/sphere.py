@@ -27,8 +27,9 @@ class Sphere(Hittable):
 
         discriminant_condition = discriminant_list > 0
         if not discriminant_condition.any():
-            return HitRecordList.new(len(r))
+            return HitRecordList.new(len(r)).set_compress_info(None)
 
+        # Calculate t
         positive_discriminant_list = (
             discriminant_list * discriminant_condition
         )
@@ -37,6 +38,7 @@ class Sphere(Hittable):
         t_0 = (-half_b - root) / non_zero_a
         t_1 = (-half_b + root) / non_zero_a
 
+        # Choose t
         t_0_condition = (
             (t_min < t_0) & (t_0 < t_max_list) & discriminant_condition
         )
@@ -47,11 +49,25 @@ class Sphere(Hittable):
         t = np.where(t_0_condition, t_0, 0)
         t = np.where(t_1_condition, t_1, t)
 
+        # Compression
+        condition = t > 0
+        full_rate = condition.sum() / len(t)
+        if full_rate > 0.8:
+            idx = None
+        else:
+            idx = np.where(condition)[0]
+            t = t[idx]
+            r = RayList(
+                Vec3List(r.orig.get_ndarray(idx)),
+                Vec3List(r.dir.get_ndarray(idx))
+            )
+
+        # Wrap up result
         point = r.at(t)
         outward_normal = (point - self.center) / self.radius
 
         result = HitRecordList(
             point, t, np.full(len(r), self.material.idx, dtype=np.int32)
-        ).set_face_normal(r, outward_normal)
+        ).set_face_normal(r, outward_normal).set_compress_info(idx)
 
         return result

@@ -83,7 +83,7 @@ def compress(r: RayList, rec: HitRecordList) \
         -> Tuple[RayList, HitRecordList, Optional[np.ndarray]]:
     condition = rec.t > 0
     full_rate = condition.sum() / len(r)
-    if full_rate > 0.6:
+    if full_rate > 0.8:
         return r, rec, None
 
     idx: np.ndarray = np.where(condition)[0]
@@ -258,7 +258,7 @@ def main() -> None:
     # pr.enable()
 
     # img_list: List[Vec3List] = list()
-    # for s in range(samples_per_pixel):
+    # for sample_num in range(samples_per_pixel):
     #     img_list.append(
     #         scan_frame(world, cam, image_width, image_height, max_depth)
     #     )
