@@ -172,6 +172,10 @@ class Vec3List:
     def z(self) -> cp.ndarray:
         return cp.transpose(self.e)[2]
 
+    def cpu(self) -> Vec3List:
+        self.e = cp.asnumpy(self.e)
+        return self
+
     def __getitem__(self, idx: int) -> Vec3:
         return Vec3(*self.e[idx])
 

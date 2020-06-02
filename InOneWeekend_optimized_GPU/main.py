@@ -203,7 +203,7 @@ def ray_color_loop(r: RayList, world: HittableList, depth: int) -> Vec3List:
     result = result_bg_list[length]
     for i in range(length - 1, -1, -1):
         result = result * attenuation_list[i] + result_bg_list[i]
-    return result
+    return result.cpu()
 
 
 def scan_frame(world: HittableList, cam: Camera,
@@ -222,12 +222,12 @@ def scan_frame(world: HittableList, cam: Camera,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 256
+    image_width = 1920
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 20
+    samples_per_pixel = 48
     max_depth = 10
 
-    world: HittableList = three_ball_scene()
+    world: HittableList = random_scene()
 
     lookfrom = Point3(13, 2, 3)
     lookat = Point3(0, 0, 0)
@@ -242,7 +242,7 @@ def main() -> None:
     print("Start rendering.")
     start_time = time.time()
 
-    img_list: List[Vec3List] = Parallel(n_jobs=1, verbose=20)(
+    img_list: List[Vec3List] = Parallel(n_jobs=4, verbose=20)(
         delayed(scan_frame)(
             world, cam, image_width, image_height, max_depth
         ) for s in range(samples_per_pixel)
