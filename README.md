@@ -6,9 +6,4 @@ This is a python implementation of the [Ray Tracing in One Weekend](https://rayt
 
 **Progress: Contents within the first book has finished.**
 
-## Requirements
-
-- Python >= 3.7
-- numpy
-- Pillow
-- joblib
+![sample](./sample.png)
