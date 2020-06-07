@@ -21,7 +21,7 @@ class Lambertian(Material):
     def scatter(self, r_in: Ray, rec: HitRecord) \
             -> Optional[Tuple[Ray, Color]]:
         scatter_direction: Vec3 = rec.normal + Vec3.random_unit_vector()
-        scattered = Ray(rec.p, scatter_direction)
+        scattered = Ray(rec.p, scatter_direction, r_in.time())
         attenuation = self.albedo
         return scattered, attenuation
 

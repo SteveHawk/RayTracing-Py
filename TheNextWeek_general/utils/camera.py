@@ -1,13 +1,14 @@
 import numpy as np  # type: ignore
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
-from utils.rtweekend import degrees_to_radians
+from utils.rtweekend import degrees_to_radians, random_float
 
 
 class Camera:
     def __init__(self, lookfrom: Point3, lookat: Point3, vup: Vec3,
                  vfov: float, aspect_ratio: float,
-                 aperture: float, focus_dist: float) -> None:
+                 aperture: float, focus_dist: float,
+                 t0: float = 0, t1: float = 0) -> None:
         """
         vfov: vertical field-of-view in degress
         """
@@ -28,6 +29,8 @@ class Camera:
             - self.w * focus_dist
         )
         self.lens_radius: float = aperture / 2
+        self.time0 = t0
+        self.time1 = t1
 
     def get_ray(self, s: float, t: float) -> Ray:
         rd: Vec3 = Vec3.random_in_unit_disk() * self.lens_radius
@@ -37,5 +40,6 @@ class Camera:
             self.origin + offset,
             (self.lower_left_corner
              + self.horizontal*s + self.vertical*t
-             - self.origin - offset)
+             - self.origin - offset),
+            random_float(self.time0, self.time1)
         )

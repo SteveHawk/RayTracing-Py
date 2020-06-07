@@ -45,6 +45,8 @@ class Vec3:
             return Vec3(*(self.e * v))
         raise TypeError
 
+    __rmul__ = __mul__
+
     def __matmul__(self, v: Vec3) -> float:
         return self.e @ v.e
 
