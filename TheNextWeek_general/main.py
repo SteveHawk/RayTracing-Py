@@ -7,6 +7,7 @@ from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import Ray
 from utils.sphere import Sphere
+from utils.moving_sphere import MovingSphere
 from utils.hittable import Hittable, HitRecord
 from utils.hittable_list import HittableList
 from utils.rtweekend import random_float
@@ -69,7 +70,10 @@ def random_scene() -> HittableList:
                     # Diffuse
                     albedo = Color.random() * Color.random()
                     sphere_material_diffuse = Lambertian(albedo)
-                    world.add(Sphere(center, 0.2, sphere_material_diffuse))
+                    center2 = center + Vec3(0, random_float(0, 0.5), 0)
+                    world.add(MovingSphere(
+                        center, center2, 0, 1, 0.2, sphere_material_diffuse
+                    ))
                 elif choose_mat < 0.8:
                     # Metal
                     albedo = Color.random(0.5, 1)
@@ -111,12 +115,12 @@ def scan_line(j: int, world: HittableList, cam: Camera,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 256
+    image_width = 128
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 20
-    max_depth = 10
+    samples_per_pixel = 5
+    max_depth = 3
 
-    world: HittableList = three_ball_scene()
+    world: HittableList = random_scene()
 
     lookfrom = Point3(13, 2, 3)
     lookat = Point3(0, 0, 0)
@@ -125,7 +129,8 @@ def main() -> None:
     dist_to_focus: float = 10
     aperture: float = 0.1
     cam = Camera(
-        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus
+        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
+        0, 1
     )
 
     print("Start rendering.")
