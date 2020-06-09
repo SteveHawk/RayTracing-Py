@@ -4,6 +4,7 @@ from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
 from utils.hittable import Hittable, HitRecord
 from utils.material import Material
+from utils.aabb import AABB
 
 
 class Sphere(Hittable):
@@ -39,3 +40,10 @@ class Sphere(Hittable):
             return rec
 
         return None
+
+    def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
+        radius_vec = Vec3(*[self.radius]*3)
+        return AABB(
+            self.center - radius_vec,
+            self.center + radius_vec
+        )

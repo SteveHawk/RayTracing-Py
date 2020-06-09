@@ -4,6 +4,7 @@ from utils.vec3 import Vec3, Point3
 from utils.hittable import Hittable, HitRecord
 from utils.material import Material
 from utils.ray import Ray
+from utils.aabb import AABB
 
 
 class MovingSphere(Hittable):
@@ -53,3 +54,15 @@ class MovingSphere(Hittable):
                 * (self.center1 - self.center0)
             )
         )
+
+    def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
+        radius_vec = Vec3(*[self.radius]*3)
+        box0 = AABB(
+            self.center(t0) - radius_vec,
+            self.center(t0) + radius_vec
+        )
+        box1 = AABB(
+            self.center(t1) - radius_vec,
+            self.center(t1) + radius_vec
+        )
+        return AABB.surrounding_box(box0, box1)

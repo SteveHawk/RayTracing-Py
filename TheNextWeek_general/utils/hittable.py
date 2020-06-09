@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
+from utils.aabb import AABB
 
 import typing
 if typing.TYPE_CHECKING:
@@ -26,4 +27,8 @@ class HitRecord:
 class Hittable(ABC):
     @abstractmethod
     def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
+        return NotImplemented
+
+    @abstractmethod
+    def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
         return NotImplemented

@@ -42,3 +42,17 @@ class AABB:
             if tmax <= tmin:
                 return False
         return True
+
+    @staticmethod
+    def surrounding_box(box0: AABB, box1: AABB) -> AABB:
+        small = Point3(
+            min(box0.min().x(), box1.min().x()),
+            min(box0.min().y(), box1.min().y()),
+            min(box0.min().z(), box1.min().z())
+        )
+        big = Point3(
+            max(box0.max().x(), box1.max().x()),
+            max(box0.max().y(), box1.max().y()),
+            max(box0.max().z(), box1.max().z())
+        )
+        return AABB(small, big)
