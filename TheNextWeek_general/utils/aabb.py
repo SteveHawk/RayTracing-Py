@@ -1,3 +1,4 @@
+from __future__ import annotations
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
 
