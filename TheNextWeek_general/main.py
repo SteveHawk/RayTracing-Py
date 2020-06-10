@@ -13,6 +13,7 @@ from utils.hittable_list import HittableList
 from utils.rtweekend import random_float
 from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
+from utils.bvh import BVHNode
 
 
 def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
@@ -115,12 +116,14 @@ def scan_line(j: int, world: HittableList, cam: Camera,
 
 def main() -> None:
     aspect_ratio = 16 / 9
-    image_width = 128
+    image_width = 256
     image_height = int(image_width / aspect_ratio)
-    samples_per_pixel = 5
-    max_depth = 3
+    samples_per_pixel = 20
+    max_depth = 10
+    time0 = 0
+    time1 = 1
 
-    world: HittableList = random_scene()
+    world = BVHNode(random_scene().objects, time0, time1)
 
     lookfrom = Point3(13, 2, 3)
     lookat = Point3(0, 0, 0)
@@ -130,14 +133,14 @@ def main() -> None:
     aperture: float = 0.1
     cam = Camera(
         lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
-        0, 1
+        time0, time1
     )
 
     print("Start rendering.")
     start_time = time.time()
 
     n_processer = multiprocessing.cpu_count()
-    img_list: List[Img] = Parallel(n_jobs=n_processer)(
+    img_list: List[Img] = Parallel(n_jobs=n_processer, verbose=10)(
         delayed(scan_line)(
             j, world, cam,
             image_width, image_height,
