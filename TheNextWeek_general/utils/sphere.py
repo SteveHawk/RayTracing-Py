@@ -1,5 +1,5 @@
 import numpy as np  # type: ignore
-from typing import Optional
+from typing import Optional, Tuple
 from utils.vec3 import Vec3, Point3
 from utils.ray import Ray
 from utils.hittable import Hittable, HitRecord
@@ -47,3 +47,11 @@ class Sphere(Hittable):
             self.center - radius_vec,
             self.center + radius_vec
         )
+
+    @staticmethod
+    def get_sphere_uv(p: Vec3) -> Tuple[float, float]:
+        phi: float = np.arctan2(p.z(), p.x())
+        theta: float = np.arcsin(p.y())
+        u: float = 1 - (phi + np.pi) / (2 * np.pi)
+        v: float = (theta + np.pi/2) / np.pi
+        return u, v
