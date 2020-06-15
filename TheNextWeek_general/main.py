@@ -3,21 +3,17 @@ import multiprocessing
 import time
 from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional
+from scenes import random_scene, three_ball_scene, two_spheres
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import Ray
-from utils.sphere import Sphere
-from utils.moving_sphere import MovingSphere
-from utils.hittable import Hittable, HitRecord
-from utils.hittable_list import HittableList
+from utils.hittable import HitRecord
 from utils.rtweekend import random_float
 from utils.camera import Camera
-from utils.material import Lambertian, Metal, Dielectric
 from utils.bvh import BVHNode
-from utils.texture import SolidColor
 
 
-def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
+def ray_color(r: Ray, world: BVHNode, depth: int) -> Color:
     if depth <= 0:
         return Color(0, 0, 0)
 
@@ -34,72 +30,7 @@ def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
     return Color(1, 1, 1) * (1 - t) + Color(0.5, 0.7, 1) * t
 
 
-def three_ball_scene() -> HittableList:
-    world = HittableList()
-    world.add(Sphere(
-        Point3(0, 0, -1), 0.5, Lambertian(SolidColor(0.1, 0.2, 0.5))
-    ))
-    world.add(Sphere(
-        Point3(0, -100.5, -1), 100, Lambertian(SolidColor(0.8, 0.8, 0))
-    ))
-    world.add(Sphere(
-        Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3)
-    ))
-    world.add(Sphere(
-        Point3(-1, 0, -1), 0.5, Dielectric(1.5)
-    ))
-    world.add(Sphere(
-        Point3(-1, 0, -1), -0.45, Dielectric(1.5)
-    ))
-    return world
-
-
-def random_scene() -> HittableList:
-    world = HittableList()
-
-    ground_material = Lambertian(SolidColor(0.5, 0.5, 0.5))
-    world.add(Sphere(Point3(0, -1000, 0), 1000, ground_material))
-
-    for a in range(-11, 11):
-        for b in range(-11, 11):
-            choose_mat = random_float()
-            center = Point3(
-                a + 0.9*random_float(), 0.2, b + 0.9*random_float()
-            )
-
-            if (center - Vec3(4, 0.2, 0)).length() > 0.9:
-                if choose_mat < 0.6:
-                    # Diffuse
-                    albedo = Color.random() * Color.random()
-                    sphere_material_diffuse = Lambertian(SolidColor(albedo))
-                    center2 = center + Vec3(0, random_float(0, 0.5), 0)
-                    world.add(MovingSphere(
-                        center, center2, 0, 1, 0.2, sphere_material_diffuse
-                    ))
-                elif choose_mat < 0.8:
-                    # Metal
-                    albedo = Color.random(0.5, 1)
-                    fuzz = random_float(0, 0.5)
-                    sphere_material_metal = Metal(albedo, fuzz)
-                    world.add(Sphere(center, 0.2, sphere_material_metal))
-                else:
-                    # Glass
-                    sphere_material_glass = Dielectric(1.5)
-                    world.add(Sphere(center, 0.2, sphere_material_glass))
-
-    material_1 = Dielectric(1.5)
-    world.add(Sphere(Point3(0, 1, 0), 1, material_1))
-
-    material_2 = Lambertian(SolidColor(0.4, 0.2, 0.1))
-    world.add(Sphere(Point3(-4, 1, 0), 1, material_2))
-
-    material_3 = Metal(Color(0.7, 0.6, 0.5), 0)
-    world.add(Sphere(Point3(4, 1, 0), 1, material_3))
-
-    return world
-
-
-def scan_line(j: int, world: HittableList, cam: Camera,
+def scan_line(j: int, world: BVHNode, cam: Camera,
               image_width: int, image_height: int,
               samples_per_pixel: int, max_depth: int) -> Img:
     img = Img(image_width, 1)
@@ -124,18 +55,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world = BVHNode(random_scene().objects, time0, time1)
-
-    lookfrom = Point3(13, 2, 3)
-    lookat = Point3(0, 0, 0)
-    vup = Vec3(0, 1, 0)
-    vfov = 20
-    dist_to_focus: float = 10
-    aperture: float = 0.1
-    cam = Camera(
-        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
-        time0, time1
-    )
+    world, cam = two_spheres(aspect_ratio, time0, time1)
 
     print("Start rendering.")
     start_time = time.time()
