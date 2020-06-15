@@ -14,6 +14,7 @@ from utils.rtweekend import random_float
 from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
 from utils.bvh import BVHNode
+from utils.texture import SolidColor
 
 
 def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
@@ -36,10 +37,10 @@ def ray_color(r: Ray, world: HittableList, depth: int) -> Color:
 def three_ball_scene() -> HittableList:
     world = HittableList()
     world.add(Sphere(
-        Point3(0, 0, -1), 0.5, Lambertian(Color(0.1, 0.2, 0.5))
+        Point3(0, 0, -1), 0.5, Lambertian(SolidColor(0.1, 0.2, 0.5))
     ))
     world.add(Sphere(
-        Point3(0, -100.5, -1), 100, Lambertian(Color(0.8, 0.8, 0))
+        Point3(0, -100.5, -1), 100, Lambertian(SolidColor(0.8, 0.8, 0))
     ))
     world.add(Sphere(
         Point3(1, 0, -1), 0.5, Metal(Color(0.8, 0.6, 0.2), 0.3)
@@ -56,7 +57,7 @@ def three_ball_scene() -> HittableList:
 def random_scene() -> HittableList:
     world = HittableList()
 
-    ground_material = Lambertian(Color(0.5, 0.5, 0.5))
+    ground_material = Lambertian(SolidColor(0.5, 0.5, 0.5))
     world.add(Sphere(Point3(0, -1000, 0), 1000, ground_material))
 
     for a in range(-11, 11):
@@ -70,7 +71,7 @@ def random_scene() -> HittableList:
                 if choose_mat < 0.6:
                     # Diffuse
                     albedo = Color.random() * Color.random()
-                    sphere_material_diffuse = Lambertian(albedo)
+                    sphere_material_diffuse = Lambertian(SolidColor(albedo))
                     center2 = center + Vec3(0, random_float(0, 0.5), 0)
                     world.add(MovingSphere(
                         center, center2, 0, 1, 0.2, sphere_material_diffuse
@@ -89,7 +90,7 @@ def random_scene() -> HittableList:
     material_1 = Dielectric(1.5)
     world.add(Sphere(Point3(0, 1, 0), 1, material_1))
 
-    material_2 = Lambertian(Color(0.4, 0.2, 0.1))
+    material_2 = Lambertian(SolidColor(0.4, 0.2, 0.1))
     world.add(Sphere(Point3(-4, 1, 0), 1, material_2))
 
     material_3 = Metal(Color(0.7, 0.6, 0.5), 0)
