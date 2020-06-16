@@ -37,6 +37,7 @@ class Sphere(Hittable):
 
             rec = HitRecord(point, t, self.material)
             rec.set_face_normal(r, outward_normal)
+            rec.u, rec.v = self.get_sphere_uv(outward_normal)
             return rec
 
         return None
