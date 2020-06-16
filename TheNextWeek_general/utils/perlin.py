@@ -6,7 +6,7 @@ from utils.rtweekend import random_int, random_float_list
 
 class Perlin:
     def __init__(self) -> None:
-        self.point_count = 256
+        self.point_count: int = 256
 
         self.ranvec: List[Vec3] = list()
         for i in range(self.point_count):
@@ -28,18 +28,18 @@ class Perlin:
         v = p.y() - np.floor(p.y())
         w = p.z() - np.floor(p.z())
 
-        i = np.floor(p.x())
-        j = np.floor(p.y())
-        k = np.floor(p.z())
+        i = int(np.floor(p.x()))
+        j = int(np.floor(p.y()))
+        k = int(np.floor(p.z()))
         c: List[List[List[Vec3]]] = np.empty((2, 2, 2), dtype=object)
 
         for di in range(2):
             for dj in range(2):
                 for dk in range(2):
                     c[di][dj][dk] = self.ranvec[
-                        self.perm_x[int(i+di) & 255]
-                        ^ self.perm_y[int(j+dj) & 255]
-                        ^ self.perm_z[int(k+dk) & 255]
+                        self.perm_x[(i+di) & 255]
+                        ^ self.perm_y[(j+dj) & 255]
+                        ^ self.perm_z[(k+dk) & 255]
                     ]
 
         return Perlin.trilinear_interp(c, u, v, w)
@@ -59,9 +59,9 @@ class Perlin:
     @staticmethod
     def trilinear_interp(c: List[List[List[Vec3]]],
                          u: float, v: float, w: float) -> float:
-        u = u*u * (3 - 2*u)
-        v = v*v * (3 - 2*v)
-        w = w*w * (3 - 2*w)
+        uu = u*u * (3 - 2*u)
+        vv = v*v * (3 - 2*v)
+        ww = w*w * (3 - 2*w)
         accum: float = 0
 
         for i in range(2):
@@ -69,9 +69,9 @@ class Perlin:
                 for k in range(2):
                     weight_v = Vec3(u-i, v-j, w-k)
                     accum += (
-                        (i*u + (1-i) * (1-u))
-                        * (j*v + (1-j) * (1-v))
-                        * (k*w + (1-k) * (1-w))
+                        (i*uu + (1-i) * (1-uu))
+                        * (j*vv + (1-j) * (1-vv))
+                        * (k*ww + (1-k) * (1-ww))
                         * (c[i][j][k] @ weight_v)
                     )
         return accum
