@@ -1,13 +1,17 @@
 import numpy as np  # type: ignore
 from typing import List
-from utils.vec3 import Point3
+from utils.vec3 import Vec3, Point3
 from utils.rtweekend import random_int, random_float_list
 
 
 class Perlin:
     def __init__(self) -> None:
         self.point_count = 256
-        self.ranfloat: List[float] = random_float_list(self.point_count)
+
+        self.ranvec: List[Vec3] = list()
+        for i in range(self.point_count):
+            self.ranvec.append(Vec3.random(-1, 1).unit_vector())
+
         self.perm_x: List[int] = self.perlin_generate_perm()
         self.perm_y: List[int] = self.perlin_generate_perm()
         self.perm_z: List[int] = self.perlin_generate_perm()
@@ -23,19 +27,16 @@ class Perlin:
         u = p.x() - np.floor(p.x())
         v = p.y() - np.floor(p.y())
         w = p.z() - np.floor(p.z())
-        u = u*u * (3 - 2*u)
-        v = v*v * (3 - 2*v)
-        w = w*w * (3 - 2*w)
 
         i = np.floor(p.x())
         j = np.floor(p.y())
         k = np.floor(p.z())
-        c = np.empty((2, 2, 2), dtype=np.float32)
+        c: List[List[List[Vec3]]] = np.empty((2, 2, 2), dtype=object)
 
         for di in range(2):
             for dj in range(2):
                 for dk in range(2):
-                    c[di][dj][dk] = self.ranfloat[
+                    c[di][dj][dk] = self.ranvec[
                         self.perm_x[int(i+di) & 255]
                         ^ self.perm_y[int(j+dj) & 255]
                         ^ self.perm_z[int(k+dk) & 255]
@@ -44,14 +45,21 @@ class Perlin:
         return Perlin.trilinear_interp(c, u, v, w)
 
     @staticmethod
-    def trilinear_interp(c: List[List[List[float]]],
+    def trilinear_interp(c: List[List[List[Vec3]]],
                          u: float, v: float, w: float) -> float:
+        u = u*u * (3 - 2*u)
+        v = v*v * (3 - 2*v)
+        w = w*w * (3 - 2*w)
         accum: float = 0
+
         for i in range(2):
             for j in range(2):
                 for k in range(2):
-                    accum += ((i*u + (1-i) * (1-u))
-                              * (j*v + (1-j) * (1-v))
-                              * (k*w + (1-k) * (1-w))
-                              ) * c[i][j][k]
+                    weight_v = Vec3(u-i, v-j, w-k)
+                    accum += (
+                        (i*u + (1-i) * (1-u))
+                        * (j*v + (1-j) * (1-v))
+                        * (k*w + (1-k) * (1-w))
+                        * (c[i][j][k] @ weight_v)
+                    )
         return accum
