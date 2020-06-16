@@ -5,7 +5,7 @@ from utils.rtweekend import random_int, random_float_list
 
 
 class Perlin:
-    def __init__(self):
+    def __init__(self) -> None:
         self.point_count = 256
         self.ranfloat: List[float] = random_float_list(self.point_count)
         self.perm_x: List[int] = self.perlin_generate_perm()
@@ -25,7 +25,7 @@ class Perlin:
         w = p.z() - np.floor(p.z())
 
         i = int(4 * p.x()) & 255
-        j = int(4 * p.z()) & 255
+        j = int(4 * p.y()) & 255
         k = int(4 * p.z()) & 255
 
         return self.ranfloat[self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]]
