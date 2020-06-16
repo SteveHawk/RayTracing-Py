@@ -39,8 +39,9 @@ class CheckerTexture(Texture):
 
 
 class NoiseTexture(Texture):
-    def __init__(self):
+    def __init__(self, scale: float = 1):
         self.noise = Perlin()
+        self.scale = scale
 
     def value(self, u: float, v: float, p: Point3) -> Color:
-        return Color(1, 1, 1) * self.noise.noise(p)
+        return Color(1, 1, 1) * self.noise.noise(p * self.scale)

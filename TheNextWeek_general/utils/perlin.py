@@ -23,6 +23,10 @@ class Perlin:
         u = p.x() - np.floor(p.x())
         v = p.y() - np.floor(p.y())
         w = p.z() - np.floor(p.z())
+        u = u*u * (3 - 2*u)
+        v = v*v * (3 - 2*v)
+        w = w*w * (3 - 2*w)
+
         i = np.floor(p.x())
         j = np.floor(p.y())
         k = np.floor(p.z())
