@@ -23,9 +23,31 @@ class Perlin:
         u = p.x() - np.floor(p.x())
         v = p.y() - np.floor(p.y())
         w = p.z() - np.floor(p.z())
+        i = np.floor(p.x())
+        j = np.floor(p.y())
+        k = np.floor(p.z())
+        c = np.empty((2, 2, 2), dtype=np.float32)
 
-        i = int(4 * p.x()) & 255
-        j = int(4 * p.y()) & 255
-        k = int(4 * p.z()) & 255
+        for di in range(2):
+            for dj in range(2):
+                for dk in range(2):
+                    c[di][dj][dk] = self.ranfloat[
+                        self.perm_x[int(i+di) & 255]
+                        ^ self.perm_y[int(j+dj) & 255]
+                        ^ self.perm_z[int(k+dk) & 255]
+                    ]
 
-        return self.ranfloat[self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]]
+        return Perlin.trilinear_interp(c, u, v, w)
+
+    @staticmethod
+    def trilinear_interp(c: List[List[List[float]]],
+                         u: float, v: float, w: float) -> float:
+        accum: float = 0
+        for i in range(2):
+            for j in range(2):
+                for k in range(2):
+                    accum += ((i*u + (1-i) * (1-u))
+                              * (j*v + (1-j) * (1-v))
+                              * (k*w + (1-k) * (1-w))
+                              ) * c[i][j][k]
+        return accum
