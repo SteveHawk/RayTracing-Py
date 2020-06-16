@@ -44,6 +44,18 @@ class Perlin:
 
         return Perlin.trilinear_interp(c, u, v, w)
 
+    def turb(self, p: Point3, depth: int = 7) -> float:
+        accum: float = 0
+        weight: float = 1
+        temp_p = p
+
+        for i in range(depth):
+            accum += weight * self.noise(temp_p)
+            weight *= 0.5
+            temp_p *= 2
+
+        return np.abs(accum)
+
     @staticmethod
     def trilinear_interp(c: List[List[List[Vec3]]],
                          u: float, v: float, w: float) -> float:

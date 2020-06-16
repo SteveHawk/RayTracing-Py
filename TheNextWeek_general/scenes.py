@@ -149,7 +149,7 @@ def two_perlin_spheres(aspect_ratio: float, time0: float, time1: float) \
         -> Tuple[BVHNode, Camera]:
     world = HittableList()
 
-    pertext = NoiseTexture(3)
+    pertext = NoiseTexture(4)
     world.add(Sphere(Point3(0, -1000, 0), 1000, Lambertian(pertext)))
     world.add(Sphere(Point3(0, 2, 0), 2, Lambertian(pertext)))
 

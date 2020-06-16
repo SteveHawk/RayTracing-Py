@@ -44,4 +44,8 @@ class NoiseTexture(Texture):
         self.scale = scale
 
     def value(self, u: float, v: float, p: Point3) -> Color:
-        return Color(1, 1, 1) * 0.5 * (1 + self.noise.noise(p * self.scale))
+        # return Color(1, 1, 1) * 0.5 * (1 + self.noise.noise(self.scale * p))
+        return (
+            Color(1, 1, 1) * 0.5
+            * (1 + np.sin(self.scale*p.z() + 10*self.noise.turb(p)))
+        )
