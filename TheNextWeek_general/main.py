@@ -3,7 +3,7 @@ import multiprocessing
 import time
 from joblib import Parallel, delayed  # type: ignore
 from typing import List, Optional
-from scenes import random_scene, three_ball_scene, two_spheres
+import scenes
 from utils.vec3 import Vec3, Point3, Color
 from utils.img import Img
 from utils.ray import Ray
@@ -55,7 +55,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world, cam = two_spheres(aspect_ratio, time0, time1)
+    world, cam = scenes.two_perlin_spheres(aspect_ratio, time0, time1)
 
     print("Start rendering.")
     start_time = time.time()

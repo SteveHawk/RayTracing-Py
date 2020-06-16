@@ -7,7 +7,7 @@ from utils.camera import Camera
 from utils.material import Lambertian, Metal, Dielectric
 from utils.rtweekend import random_float
 from utils.bvh import BVHNode
-from utils.texture import SolidColor, CheckerTexture
+from utils.texture import SolidColor, CheckerTexture, NoiseTexture
 
 
 def three_ball_scene(aspect_ratio: float, time0: float, time1: float) \
@@ -128,6 +128,30 @@ def two_spheres(aspect_ratio: float, time0: float, time1: float) \
     )
     world.add(Sphere(Point3(0, -10, 0), 10, Lambertian(checker)))
     world.add(Sphere(Point3(0, 10, 0), 10, Lambertian(checker)))
+
+    world_bvh = BVHNode(world.objects, time0, time1)
+
+    lookfrom = Point3(13, 2, 3)
+    lookat = Point3(0, 0, 0)
+    vup = Vec3(0, 1, 0)
+    vfov = 20
+    dist_to_focus: float = 10
+    aperture: float = 0
+    cam = Camera(
+        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
+        time0, time1
+    )
+
+    return world_bvh, cam
+
+
+def two_perlin_spheres(aspect_ratio: float, time0: float, time1: float) \
+        -> Tuple[BVHNode, Camera]:
+    world = HittableList()
+
+    pertext = NoiseTexture()
+    world.add(Sphere(Point3(0, -1000, 0), 1000, Lambertian(pertext)))
+    world.add(Sphere(Point3(0, 2, 0), 2, Lambertian(pertext)))
 
     world_bvh = BVHNode(world.objects, time0, time1)
 

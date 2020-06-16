@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np  # type: ignore
 from typing import Union
 from utils.vec3 import Vec3, Color, Point3
+from utils.perlin import Perlin
 
 
 class Texture(ABC):
@@ -35,3 +36,11 @@ class CheckerTexture(Texture):
             return self.odd.value(u, v, p)
         else:
             return self.even.value(u, v, p)
+
+
+class NoiseTexture(Texture):
+    def __init__(self):
+        self.noise = Perlin()
+
+    def value(self, u: float, v: float, p: Point3) -> Color:
+        return Color(1, 1, 1) * self.noise.noise(p)
