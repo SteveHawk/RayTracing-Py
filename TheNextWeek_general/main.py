@@ -55,7 +55,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world, cam = scenes.two_perlin_spheres(aspect_ratio, time0, time1)
+    world, cam = scenes.earth(aspect_ratio, time0, time1)
 
     print("Start rendering.")
     start_time = time.time()

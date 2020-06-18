@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np  # type: ignore
+from PIL import Image
 from typing import Union
 from utils.vec3 import Vec3, Color, Point3
 from utils.perlin import Perlin
@@ -50,3 +51,23 @@ class NoiseTexture(Texture):
             Color(1, 1, 1) * 0.5
             * (1 + np.sin(self.scale*p.z() + 10*self.noise.turb(p)))
         )
+
+
+class ImageTexture(Texture):
+    def __init__(self, filename: str) -> None:
+        self.data = np.asarray(Image.open(filename))
+        self.height, self.width, _ = self.data.shape
+
+    def value(self, u: float, v: float, p: Vec3) -> Color:
+        u = np.clip(u, 0, 1)
+        v = 1 - np.clip(v, 0, 1)
+
+        i = int(u * self.width)
+        j = int(v * self.height)
+        if i >= self.width:
+            i = self.width - 1
+        if j >= self.height:
+            j = self.height - 1
+
+        pixel = self.data[j][i] / 255
+        return Color(*pixel)
