@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Optional
 import numpy as np  # type: ignore
 from utils.ray import Ray
-from utils.vec3 import Vec3, Color
+from utils.vec3 import Vec3, Color, Point3
 from utils.hittable import HitRecord
 from utils.rtweekend import random_float
 from utils.texture import Texture
@@ -13,6 +13,9 @@ class Material(ABC):
     def scatter(self, r_in: Ray, rec: HitRecord) \
             -> Optional[Tuple[Ray, Color]]:
         return NotImplemented
+
+    def emitted(self, u: float, v: float, p: Point3) -> Color:
+        return Color(0, 0, 0)
 
 
 class Lambertian(Material):
@@ -92,3 +95,15 @@ class Dielectric(Material):
         r0 = (1 - ref_idx) / (1 + ref_idx)
         r0 **= 2
         return r0 + (1 - r0) * ((1 - cosine) ** 5)
+
+
+class DiffuseLight(Material):
+    def __init__(self, emit: Texture):
+        self.emit = emit
+
+    def scatter(self, r_in: Ray, rec: HitRecord) \
+            -> Optional[Tuple[Ray, Color]]:
+        return None
+
+    def emitted(self, u: float, v: float, p: Point3) -> Color:
+        return self.emit.value(u, v, p)
