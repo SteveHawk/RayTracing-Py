@@ -54,7 +54,7 @@ def scan_line(j: int, background: Color, world: BVHNode, cam: Camera,
 
 
 def main() -> None:
-    aspect_ratio = 16 / 9
+    aspect_ratio = 1
     image_width = 256
     image_height = int(image_width / aspect_ratio)
     samples_per_pixel = 20
@@ -62,7 +62,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world, cam = scenes.simple_light(aspect_ratio, time0, time1)
+    world, cam = scenes.cornell_box(aspect_ratio, time0, time1)
     background = Color(0, 0, 0)
 
     print("Start rendering.")
