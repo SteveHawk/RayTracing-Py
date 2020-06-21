@@ -47,7 +47,7 @@ class Perlin:
     def turb(self, p: Point3, depth: int = 7) -> float:
         accum: float = 0
         weight: float = 1
-        temp_p = p
+        temp_p = Point3(*p.e)
 
         for i in range(depth):
             accum += weight * self.noise(temp_p)
