@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np  # type: ignore
-from PIL import Image
+from PIL import Image  # type: ignore
 from typing import Union
 from utils.vec3 import Vec3, Color, Point3
 from utils.perlin import Perlin
