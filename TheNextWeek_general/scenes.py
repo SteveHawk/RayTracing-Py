@@ -10,6 +10,7 @@ from utils.bvh import BVHNode
 from utils.texture import SolidColor, CheckerTexture, NoiseTexture, ImageTexture
 from utils.aarect import XYRect, XZRect, YZRect
 from utils.hittable import FlipFace
+from utils.box import Box
 
 
 def three_ball_scene(aspect_ratio: float, time0: float, time1: float) \
@@ -239,6 +240,9 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
     world.add(XZRect(0, 555, 0, 555, 0, white))
     world.add(FlipFace(XZRect(0, 555, 0, 555, 555, white)))
     world.add(FlipFace(XYRect(0, 555, 0, 555, 555, white)))
+
+    world.add(Box(Point3(130, 0, 65), Point3(295, 165, 230), white))
+    world.add(Box(Point3(265, 0, 295), Point3(430, 330, 460), white))
 
     world_bvh = BVHNode(world.objects, time0, time1)
 
