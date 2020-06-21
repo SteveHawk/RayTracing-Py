@@ -209,8 +209,8 @@ def simple_light(aspect_ratio: float, time0: float, time1: float) \
 
     world_bvh = BVHNode(world.objects, time0, time1)
 
-    lookfrom = Point3(26, 6, 6)
-    lookat = Point3(0, 0, 0)
+    lookfrom = Point3(23, 4, 5)
+    lookat = Point3(0, 2, 0)
     vup = Vec3(0, 1, 0)
     vfov = 20
     dist_to_focus: float = 10
