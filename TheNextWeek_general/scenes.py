@@ -9,6 +9,7 @@ from utils.rtweekend import random_float
 from utils.bvh import BVHNode
 from utils.texture import SolidColor, CheckerTexture, NoiseTexture, ImageTexture
 from utils.aarect import XYRect, XZRect, YZRect
+from utils.hittable import FlipFace
 
 
 def three_ball_scene(aspect_ratio: float, time0: float, time1: float) \
@@ -232,12 +233,12 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
     green = Lambertian(SolidColor(0.12, 0.45, 0.15))
     light = DiffuseLight(SolidColor(15, 15, 15))
 
-    world.add(YZRect(0, 555, 0, 555, 555, green))
+    world.add(FlipFace(YZRect(0, 555, 0, 555, 555, green)))
     world.add(YZRect(0, 555, 0, 555, 0, red))
     world.add(XZRect(213, 343, 227, 332, 554, light))
     world.add(XZRect(0, 555, 0, 555, 0, white))
-    world.add(XZRect(0, 555, 0, 555, 555, white))
-    world.add(XYRect(0, 555, 0, 555, 555, white))
+    world.add(FlipFace(XZRect(0, 555, 0, 555, 555, white)))
+    world.add(FlipFace(XYRect(0, 555, 0, 555, 555, white)))
 
     world_bvh = BVHNode(world.objects, time0, time1)
 

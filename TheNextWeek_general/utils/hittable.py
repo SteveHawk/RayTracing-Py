@@ -34,3 +34,18 @@ class Hittable(ABC):
     @abstractmethod
     def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
         return NotImplemented
+
+
+class FlipFace(Hittable):
+    def __init__(self, obj: Hittable):
+        self.obj = obj
+
+    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
+        rec = self.obj.hit(r, t_min, t_max)
+        if rec is None:
+            return None
+        rec.front_face = not rec.front_face
+        return rec
+
+    def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
+        return self.obj.bounding_box(t0, t1)
