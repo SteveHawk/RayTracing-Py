@@ -62,7 +62,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world, cam = scenes.earth(aspect_ratio, time0, time1)
+    world, cam = scenes.simple_light(aspect_ratio, time0, time1)
     background = Color(0, 0, 0)
 
     print("Start rendering.")

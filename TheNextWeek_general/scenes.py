@@ -4,10 +4,11 @@ from utils.sphere import Sphere
 from utils.moving_sphere import MovingSphere
 from utils.hittable_list import HittableList
 from utils.camera import Camera
-from utils.material import Lambertian, Metal, Dielectric
+from utils.material import Lambertian, Metal, Dielectric, DiffuseLight
 from utils.rtweekend import random_float
 from utils.bvh import BVHNode
 from utils.texture import SolidColor, CheckerTexture, NoiseTexture, ImageTexture
+from utils.aarect import XYRect
 
 
 def three_ball_scene(aspect_ratio: float, time0: float, time1: float) \
@@ -184,6 +185,34 @@ def earth(aspect_ratio: float, time0: float, time1: float) \
     lookat = Point3(0, 0, 0)
     vup = Vec3(0, 1, 0)
     vfov = 50
+    dist_to_focus: float = 10
+    aperture: float = 0
+    cam = Camera(
+        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
+        time0, time1
+    )
+
+    return world_bvh, cam
+
+
+def simple_light(aspect_ratio: float, time0: float, time1: float) \
+        -> Tuple[BVHNode, Camera]:
+    world = HittableList()
+
+    pertext = NoiseTexture(4)
+    world.add(Sphere(Point3(0, -1000, 0), 1000, Lambertian(pertext)))
+    world.add(Sphere(Point3(0, 2, 0), 2, Lambertian(pertext)))
+
+    difflight = DiffuseLight(SolidColor(4, 4, 4))
+    world.add(Sphere(Point3(0, 7, 0), 2, difflight))
+    world.add(XYRect(3, 5, 1, 3, -2, difflight))
+
+    world_bvh = BVHNode(world.objects, time0, time1)
+
+    lookfrom = Point3(26, 6, 6)
+    lookat = Point3(0, 0, 0)
+    vup = Vec3(0, 1, 0)
+    vfov = 20
     dist_to_focus: float = 10
     aperture: float = 0
     cam = Camera(
