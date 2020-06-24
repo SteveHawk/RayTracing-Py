@@ -49,3 +49,32 @@ class FlipFace(Hittable):
 
     def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
         return self.obj.bounding_box(t0, t1)
+
+
+class Translate(Hittable):
+    def __init__(self, obj: Hittable, displacement: Vec3) -> None:
+        self.obj = obj
+        self.offset = displacement
+
+    def hit(self, r: Ray, t_min: float, t_max: float) -> Optional[HitRecord]:
+        # remove the offset to hit the real object
+        moved_r = Ray(r.origin() - self.offset, r.direction(), r.time())
+        rec = self.obj.hit(moved_r, t_min, t_max)
+        if rec is None:
+            return None
+
+        # add the offset back to simulate the move
+        rec.p += self.offset
+        rec.set_face_normal(moved_r, rec.normal)
+        return rec
+
+    def bounding_box(self, t0: float, t1: float) -> Optional[AABB]:
+        box = self.obj.bounding_box(t0, t1)
+        if box is None:
+            return None
+
+        output_box = AABB(
+            box.min() + self.offset,
+            box.max() + self.offset
+        )
+        return output_box
