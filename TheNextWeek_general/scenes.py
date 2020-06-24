@@ -9,7 +9,7 @@ from utils.rtweekend import random_float
 from utils.bvh import BVHNode
 from utils.texture import SolidColor, CheckerTexture, NoiseTexture, ImageTexture
 from utils.aarect import XYRect, XZRect, YZRect
-from utils.hittable import FlipFace
+from utils.hittable import Hittable, FlipFace, RotateY, Translate
 from utils.box import Box
 
 
@@ -229,11 +229,13 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
         -> Tuple[BVHNode, Camera]:
     world = HittableList()
 
+    # Colors
     red = Lambertian(SolidColor(0.65, 0.05, 0.05))
     white = Lambertian(SolidColor(0.73, 0.73, 0.73))
     green = Lambertian(SolidColor(0.12, 0.45, 0.15))
     light = DiffuseLight(SolidColor(15, 15, 15))
 
+    # Outer box
     world.add(FlipFace(YZRect(0, 555, 0, 555, 555, green)))
     world.add(YZRect(0, 555, 0, 555, 0, red))
     world.add(XZRect(213, 343, 227, 332, 554, light))
@@ -241,8 +243,16 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
     world.add(FlipFace(XZRect(0, 555, 0, 555, 555, white)))
     world.add(FlipFace(XYRect(0, 555, 0, 555, 555, white)))
 
-    world.add(Box(Point3(130, 0, 65), Point3(295, 165, 230), white))
-    world.add(Box(Point3(265, 0, 295), Point3(430, 330, 460), white))
+    # Objects in the box
+    box1: Hittable = Box(Vec3(0, 0, 0), Point3(165, 330, 165), white)
+    box1 = RotateY(box1, 15)
+    box1 = Translate(box1, Point3(265, 0, 295))
+    world.add(box1)
+
+    box2: Hittable = Box(Point3(0, 0, 0), Point3(165, 165, 165), white)
+    box2 = RotateY(box2, -18)
+    box2 = Translate(box2, Point3(130, 0, 65))
+    world.add(box2)
 
     world_bvh = BVHNode(world.objects, time0, time1)
 
