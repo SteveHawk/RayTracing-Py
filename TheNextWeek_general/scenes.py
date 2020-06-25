@@ -290,7 +290,7 @@ def final_scene(aspect_ratio: float, time0: float, time1: float) \
             x1 = x0 + w
             y1 = random_float(1, 101)
             z1 = z0 + w
-            world.add(Box(Point3(x0, y0, x0), Point3(x1, y1, z1), ground))
+            boxes1.add(Box(Point3(x0, y0, x0), Point3(x1, y1, z1), ground))
     world.add(BVHNode(boxes1.objects, time0, time1))
 
     # Light
