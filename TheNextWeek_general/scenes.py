@@ -271,3 +271,82 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
     )
 
     return world_bvh, cam
+
+
+def final_scene(aspect_ratio: float, time0: float, time1: float) \
+        -> Tuple[BVHNode, Camera]:
+    world = HittableList()
+
+    # Ground
+    boxes1 = HittableList()
+    ground = Lambertian(SolidColor(0.48, 0.83, 0.53))
+    boxes_per_side = 20
+    for i in range(boxes_per_side):
+        for j in range(boxes_per_side):
+            w = 100
+            x0 = -1000 + i*w
+            z0 = -1000 + j*w
+            y0 = 0
+            x1 = x0 + w
+            y1 = random_float(1, 101)
+            z1 = z0 + w
+            world.add(Box(Point3(x0, y0, x0), Point3(x1, y1, z1), ground))
+    world.add(BVHNode(boxes1.objects, time0, time1))
+
+    # Light
+    light = DiffuseLight(SolidColor(7, 7, 7))
+    world.add(XZRect(123, 423, 147, 412, 554, light))
+
+    # Moving sphere
+    center1 = Point3(400, 400, 200)
+    center2 = center1 + Vec3(30, 0, 0)
+    moving_sphere_material = Lambertian(SolidColor(0.7, 0.3, 0.1))
+    world.add(MovingSphere(center1, center2, 0, 1, 50, moving_sphere_material))
+
+    # Dielectric & metal balls
+    world.add(Sphere(Point3(260, 150, 45), 50, Dielectric(1.5)))
+    world.add(
+        Sphere(Point3(0, 150, 145), 50, Metal(Color(0.8, 0.8, 0.9), 10.0))
+    )
+
+    # The subsurface reflection sphere
+    boundary = Sphere(Point3(360, 150, 145), 70, Dielectric(1.5))
+    world.add(boundary)
+    world.add(ConstantMedium(boundary, 0.2, SolidColor(0.2, 0.4, 0.9)))
+
+    # Big thin mist
+    mist = Sphere(Point3(0, 0, 0), 5000, Dielectric(1.5))
+    world.add(ConstantMedium(mist, 0.0001, SolidColor(1, 1, 1)))
+
+    # Earth and marble ball
+    emat = Lambertian(ImageTexture("earthmap.jpg"))
+    world.add(Sphere(Point3(400, 200, 400), 100, emat))
+    pertext = NoiseTexture(0.1)
+    world.add(Sphere(Point3(220, 280, 300), 80, Lambertian(pertext)))
+
+    # Foam
+    boxes2 = HittableList()
+    white = Lambertian(SolidColor(0.73, 0.73, 0.73))
+    ns = 1000
+    for j in range(ns):
+        boxes2.add(Sphere(Point3.random(0, 165), 10, white))
+    world.add(Translate(
+        RotateY(
+            BVHNode(boxes2.objects, time0, time1), 15
+        ), Vec3(-100, 270, 395)
+    ))
+
+    world_bvh = BVHNode(world.objects, time0, time1)
+
+    lookfrom = Point3(478, 278, -600)
+    lookat = Point3(278, 278, 0)
+    vup = Vec3(0, 1, 0)
+    vfov = 40
+    dist_to_focus: float = 10
+    aperture: float = 0
+    cam = Camera(
+        lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus,
+        time0, time1
+    )
+
+    return world_bvh, cam

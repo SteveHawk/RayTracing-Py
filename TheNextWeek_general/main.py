@@ -62,7 +62,7 @@ def main() -> None:
     time0 = 0
     time1 = 1
 
-    world, cam = scenes.cornell_box(aspect_ratio, time0, time1)
+    world, cam = scenes.final_scene(aspect_ratio, time0, time1)
     background = Color(0, 0, 0)
 
     print("Start rendering.")
