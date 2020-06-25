@@ -107,3 +107,14 @@ class DiffuseLight(Material):
 
     def emitted(self, u: float, v: float, p: Point3) -> Color:
         return self.emit.value(u, v, p)
+
+
+class Isotropic(Material):
+    def __init__(self, a: Texture) -> None:
+        self.albedo = a
+
+    def scatter(self, r_in: Ray, rec: HitRecord) \
+            -> Optional[Tuple[Ray, Color]]:
+        scattered = Ray(rec.p, Vec3.random_in_unit_sphere(), r_in.time())
+        attenuation = self.albedo.value(rec.u, rec.v, rec.p)
+        return scattered, attenuation

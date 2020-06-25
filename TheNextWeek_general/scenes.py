@@ -11,6 +11,7 @@ from utils.texture import SolidColor, CheckerTexture, NoiseTexture, ImageTexture
 from utils.aarect import XYRect, XZRect, YZRect
 from utils.hittable import Hittable, FlipFace, RotateY, Translate
 from utils.box import Box
+from utils.constant_medium import ConstantMedium
 
 
 def three_ball_scene(aspect_ratio: float, time0: float, time1: float) \
@@ -247,11 +248,13 @@ def cornell_box(aspect_ratio: float, time0: float, time1: float) \
     box1: Hittable = Box(Vec3(0, 0, 0), Point3(165, 330, 165), white)
     box1 = RotateY(box1, 15)
     box1 = Translate(box1, Point3(265, 0, 295))
+    box1 = ConstantMedium(box1, 0.01, SolidColor(0, 0, 0))
     world.add(box1)
 
     box2: Hittable = Box(Point3(0, 0, 0), Point3(165, 165, 165), white)
     box2 = RotateY(box2, -18)
     box2 = Translate(box2, Point3(130, 0, 65))
+    box2 = ConstantMedium(box2, 0.01, SolidColor(1, 1, 1))
     world.add(box2)
 
     world_bvh = BVHNode(world.objects, time0, time1)
